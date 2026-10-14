@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Su Kuyusu Denetim Formu</title>
+<style>
+  :root{--bg:#0d0f14;--card:#161a22;--border:#2a303c;--accent:#00B9C6;--text:#f0ede8;--muted:#8a90a3;--input:#1d2130;--ok:#2ec16b;--err:#e05c6b;--warn:#e0a06b;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.5;}
+  .wrap{max-width:640px;margin:0 auto;padding:18px 16px 60px;}
+  header{padding:18px 0 10px;}
+  h1{font-size:19px;font-weight:700;}
+  .sub{font-size:12.5px;color:var(--muted);margin-top:4px;}
+  .net{font-size:12px;margin-top:8px;padding:6px 10px;border-radius:8px;display:inline-block;}
+  .net.on{background:rgba(46,193,107,.12);color:var(--ok);}
+  .net.off{background:rgba(224,160,107,.12);color:var(--warn);}
+  .f{margin:16px 0;}
+  label.q{display:block;font-size:13.5px;font-weight:600;margin-bottom:7px;}
+  label.q .req{color:var(--err);}
+  input[type=text],input[type=date],select,textarea{width:100%;background:var(--input);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;padding:12px;font-family:inherit;}
+  textarea{min-height:90px;resize:vertical;}
+  .opts{display:flex;flex-direction:column;gap:8px;}
+  .opt{display:flex;align-items:center;gap:10px;background:var(--input);border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;font-size:14.5px;cursor:pointer;}
+  .opt input{width:18px;height:18px;accent-color:var(--accent);}
+  .btn{width:100%;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;background:var(--accent);color:#06222a;cursor:pointer;margin-top:10px;font-family:inherit;}
+  .btn:disabled{opacity:.5;}
+  .msg{margin-top:14px;padding:12px;border-radius:10px;font-size:14px;display:none;}
+  .msg.ok{background:rgba(46,193,107,.14);color:var(--ok);display:block;}
+  .msg.err{background:rgba(224,92,107,.14);color:var(--err);display:block;}
+  .queued{font-size:12px;color:var(--warn);margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="ftitle">Su Kuyusu Denetim Formu</h1>
+    <div class="sub">Sahada doldurup gönderdiğiniz form merkeze iletilir.</div>
+    <div class="net" id="net">Bağlantı denetleniyor…</div>
+    <div class="queued" id="queued"></div>
+  </header>
+  <form id="form"></form>
+  <button class="btn" id="submitBtn" onclick="submitForm()">Gönder</button>
+  <div class="msg" id="msg"></div>
+</div>
+
+<script src="form-schema.js"></script>
+<script src="config.js"></script>
+<script>
+var FORM = window.OTTER_FORM || {form_id:"", title:"", fields:[]};
+var QKEY = "otter_web_queue";
+
+function el(tag, attrs, html){ var e=document.createElement(tag); if(attrs) for(var k in attrs) e.setAttribute(k,attrs[k]); if(html!=null) e.innerHTML=html; return e; }
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+function render(){
+  document.getElementById('ftitle').textContent = FORM.title || 'Form';
+  var f=document.getElementById('form');
+  FORM.fields.forEach(function(fld){
+    var box=el('div',{class:'f'});
+    var req = fld.required ? ' <span class="req">*</span>' : '';
+    box.appendChild(el('label',{class:'q'}, esc(fld.label)+req));
+    var t=fld.type, id=fld.id;
+    if(t==='textarea'){ box.appendChild(el('textarea',{id:'i_'+id})); }
+    else if(t==='dropdown'){
+      var sel=el('select',{id:'i_'+id});
+      sel.appendChild(el('option',{value:''},'— Seçin —'));
+      (fld.options||[]).forEach(function(o){ sel.appendChild(el('option',{value:o}, esc(o))); });
+      box.appendChild(sel);
+    }
+    else if(t==='radio'||t==='checkbox'){
+      var opts=el('div',{class:'opts'});
+      (fld.options||[]).forEach(function(o,i){
+        var lab=el('label',{class:'opt'});
+        var inp=el('input',{type:(t==='radio'?'radio':'checkbox'),name:'i_'+id,value:o});
+        lab.appendChild(inp); lab.appendChild(document.createTextNode(' '+o));
+        opts.appendChild(lab);
+      });
+      box.appendChild(opts);
+    }
+    else { box.appendChild(el('input',{type:(t==='date'?'date':'text'),id:'i_'+id})); }
+    f.appendChild(box);
+  });
+}
+
+function collect(){
+  var data={}, missing=[];
+  FORM.fields.forEach(function(fld){
+    var t=fld.type, id=fld.id, val;
+    if(t==='radio'){ var c=document.querySelector('input[name="i_'+id+'"]:checked'); val=c?c.value:''; }
+    else if(t==='checkbox'){ val=[]; document.querySelectorAll('input[name="i_'+id+'"]:checked').forEach(function(c){val.push(c.value);}); }
+    else { var e=document.getElementById('i_'+id); val=e?e.value.trim():''; }
+    data[id]=val;
+    var empty = (t==='checkbox') ? (val.length===0) : (!val);
+    if(fld.required && empty) missing.push(fld.label);
+  });
+  return {data:data, missing:missing};
+}
+
+function uuid(){ return (crypto.randomUUID? crypto.randomUUID() : 'web-'+Date.now()+'-'+Math.random().toString(16).slice(2)); }
+
+function submitForm(){
+  var c=collect();
+  if(c.missing.length){ showMsg('err','Zorunlu alanlar eksik: '+c.missing.join(', ')); window.scrollTo(0,0); return; }
+  var rec={ client_id:uuid(), form_id:FORM.form_id, data:c.data, submitted_at:new Date().toISOString(), source:'web' };
+  var btn=document.getElementById('submitBtn'); btn.disabled=true; showMsg('','Gönderiliyor…');
+  sendToCloud(rec).then(function(){
+    btn.disabled=false; showMsg('ok','✓ Gönderildi. Teşekkürler!');
+    document.getElementById('form').innerHTML=''; render(); window.scrollTo(0,0);
+  }).catch(function(){
+    queue(rec); btn.disabled=false;
+    showMsg('ok','✓ Kaydedildi. İnternet gelince otomatik gönderilecek.');
+    document.getElementById('form').innerHTML=''; render(); updateQueued(); window.scrollTo(0,0);
+  });
+}
+
+function sendToCloud(rec){
+  return fetch(SUPABASE_URL+'/rest/v1/'+SUPABASE_TABLE, {
+    method:'POST',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(rec)
+  }).then(function(r){
+    if(r.ok || r.status===409) return true;          // 409 = aynı client_id zaten var → başarılı say
+    return r.text().then(function(t){ throw new Error('HTTP '+r.status+' '+t); });
+  });
+}
+
+function queue(rec){ var q=load(); q.push(rec); save(q); }
+function load(){ try{ return JSON.parse(localStorage.getItem(QKEY)||'[]'); }catch(e){ return []; } }
+function save(q){ try{ localStorage.setItem(QKEY, JSON.stringify(q)); }catch(e){} }
+
+function flush(){
+  var q=load(); if(!q.length) return;
+  var rec=q[0];
+  sendToCloud(rec).then(function(){
+    var q2=load(); q2.shift(); save(q2); updateQueued(); flush();  // sırayla devam
+  }).catch(function(){ /* hâlâ offline, sonra */ });
+}
+
+function updateQueued(){
+  var n=load().length;
+  document.getElementById('queued').textContent = n? ('⏳ '+n+' kayıt gönderilmeyi bekliyor') : '';
+}
+function updateNet(){
+  var on=navigator.onLine;
+  var e=document.getElementById('net');
+  e.className='net '+(on?'on':'off'); e.textContent = on? '● Çevrimiçi' : '● Çevrimdışı — kayıtlar saklanır';
+  if(on) flush();
+}
+function showMsg(kind,txt){ var m=document.getElementById('msg'); m.className='msg '+(kind||''); m.textContent=txt; if(!kind) m.style.display='block'; }
+
+window.addEventListener('online', updateNet);
+window.addEventListener('offline', updateNet);
+window.addEventListener('DOMContentLoaded', function(){ render(); updateNet(); updateQueued(); });
+</script>
+</body>
+</html>
