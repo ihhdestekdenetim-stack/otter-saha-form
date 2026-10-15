@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>OTTER Saha Portalı</title>
+<style>
+:root{--bg:#0d0f14;--card:#161a22;--card2:#1a1f2b;--card3:#1e2330;--border:#252b38;--accent:#00B9C6;--text:#f0ede8;--text2:#c8c4bc;--muted:#7a8099;--input:#1d2130;--ok:#2ec16b;--err:#e05c6b;--warn:#e0a06b;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100vh;}
+.wrap{max-width:860px;margin:0 auto;padding:16px;}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.brand{font-size:18px;font-weight:600;color:var(--accent);}
+.who{font-size:13px;color:var(--text2);}
+.tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.tab{background:var(--card3);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer;}
+.tab.active{background:var(--accent);color:#07121a;font-weight:600;border-color:var(--accent);}
+.btn{border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;background:var(--accent);color:#07121a;font-family:inherit;}
+.btn.ghost{background:var(--card3);color:var(--text2);border:1px solid var(--border);}
+.btn.ok{background:var(--ok);color:#07121a;}
+.btn.sm{padding:6px 12px;font-size:13px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.pill{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600;}
+.pill.draft{background:rgba(224,160,107,.18);color:var(--warn);}
+.pill.submitted{background:rgba(0,185,198,.18);color:var(--accent);}
+.pill.locked{background:rgba(46,193,107,.18);color:var(--ok);}
+.pill.assigned{background:rgba(224,160,107,.18);color:var(--warn);}
+.pill.revised{background:rgba(46,193,107,.18);color:var(--ok);}
+label.fl{display:block;font-size:13px;color:var(--text2);margin:12px 0 5px;}
+label.fl .req{color:var(--err);}
+input[type=text],input[type=date],input[type=password],select,textarea{width:100%;background:var(--input);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:10px;font-family:inherit;}
+textarea{min-height:80px;resize:vertical;}
+.opts label{display:block;font-size:14px;padding:5px 0;cursor:pointer;}
+.opts input{margin-right:8px;}
+.msg{font-size:13px;padding:10px 14px;border-radius:8px;margin:10px 0;display:none;}
+.msg.show{display:block;}
+.msg.ok{background:rgba(46,193,107,.12);color:var(--ok);}
+.msg.err{background:rgba(224,92,107,.12);color:var(--err);}
+.login{max-width:360px;margin:12vh auto;}
+.muted{color:var(--muted);font-size:13px;}
+.hide{display:none;}
+.locknote{font-size:12px;color:var(--ok);margin-top:4px;}
+.actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- GİRİŞ -->
+  <div id="loginView" class="login">
+    <div class="brand" style="font-size:22px;text-align:center;margin-bottom:6px;">OTTER Saha Portalı</div>
+    <div class="muted" style="text-align:center;margin-bottom:20px;">Kullanıcı adı ve şifrenizle giriş yapın</div>
+    <div class="card">
+      <label class="fl">Kullanıcı adı</label>
+      <input type="text" id="luser" autocomplete="username" autocapitalize="none"/>
+      <label class="fl">Şifre</label>
+      <input type="password" id="lpass" autocomplete="current-password"/>
+      <div id="loginMsg" class="msg"></div>
+      <div class="actions"><button class="btn" id="btnLogin" style="width:100%;">Giriş Yap</button></div>
+    </div>
+  </div>
+
+  <!-- UYGULAMA -->
+  <div id="appView" class="hide">
+    <header>
+      <span class="brand">OTTER Saha Portalı</span>
+      <span class="row" style="gap:12px;"><span class="who" id="whoami"></span>
+        <button class="btn ghost sm" id="btnLogout">Çıkış</button></span>
+    </header>
+    <div class="tabs">
+      <button class="tab active" id="tabResp" onclick="showTab('resp')">Yanıtlarım</button>
+      <button class="tab" id="tabRev" onclick="showTab('rev')">Bana Atanan Revizyonlar</button>
+    </div>
+    <div id="globalMsg" class="msg"></div>
+
+    <!-- Yanıtlarım -->
+    <section id="secResp">
+      <div class="row" style="margin-bottom:12px;">
+        <div class="muted" id="respCount"></div>
+        <button class="btn" onclick="openResponse(null)">+ Yeni Yanıt</button>
+      </div>
+      <div id="respList"></div>
+    </section>
+
+    <!-- Revizyonlar -->
+    <section id="secRev" class="hide">
+      <div class="muted" id="revCount" style="margin-bottom:12px;"></div>
+      <div id="revList"></div>
+    </section>
+
+    <!-- Form paneli (yanıt doldur/düzenle) -->
+    <section id="respForm" class="hide">
+      <div class="card">
+        <div class="row"><b id="respFormTitle">Yeni Yanıt</b>
+          <button class="btn ghost sm" onclick="closeResponse()">← Listeye dön</button></div>
+        <div id="respLockNote" class="locknote hide">Bu yanıt onaylandı; artık düzenlenemez.</div>
+        <div id="fields"></div>
+        <div id="respFormMsg" class="msg"></div>
+        <div class="actions" id="respFormActions">
+          <button class="btn ghost" id="btnSaveDraft">Taslak Kaydet</button>
+          <button class="btn ok" id="btnSubmit">Gönder (onaya)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Revizyon paneli -->
+    <section id="revForm" class="hide">
+      <div class="card">
+        <div class="row"><b id="revFormTitle">Revizyon</b>
+          <button class="btn ghost sm" onclick="closeRevision()">← Listeye dön</button></div>
+        <div class="muted" id="revNote" style="margin:8px 0;"></div>
+        <div id="revFields"></div>
+        <div id="revFormMsg" class="msg"></div>
+        <div class="actions"><button class="btn ok" id="btnRevSave">Revizeyi Gönder</button></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="form-schema.js"></script>
+<script>
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+var ME = null;             // {username}
+var RESP = [], REV = [];   // yüklü kayıtlar
+var editingResp = null, editingRev = null;
+
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function show(el,t,ok){var m=document.getElementById(el);m.textContent=t;m.className='msg show '+(ok?'ok':'err');}
+function hideMsg(el){document.getElementById(el).className='msg';}
+
+// ── Oturum ──────────────────────────────────────────────────
+async function init(){
+  var {data}=await sb.auth.getSession();
+  if(data && data.session){ await enterApp(); } else { document.getElementById('loginView').classList.remove('hide'); }
+}
+async function enterApp(){
+  var {data}=await sb.auth.getUser();
+  var u=data && data.user; if(!u){ return doLogout(); }
+  ME={username:(u.user_metadata&&u.user_metadata.username)||(u.email||'').split('@')[0]};
+  document.getElementById('loginView').classList.add('hide');
+  document.getElementById('appView').classList.remove('hide');
+  document.getElementById('whoami').textContent=ME.username;
+  showTab('resp'); loadResponses(); loadRevisions();
+}
+document.getElementById('btnLogin').onclick=async function(){
+  hideMsg('loginMsg');
+  var user=document.getElementById('luser').value.trim().toLowerCase();
+  var pass=document.getElementById('lpass').value;
+  if(!user||!pass){ show('loginMsg','Kullanıcı adı ve şifre gerekli.',false); return; }
+  this.disabled=true;
+  var {error}=await sb.auth.signInWithPassword({email:user+'@'+EMAIL_DOMAIN,password:pass});
+  this.disabled=false;
+  if(error){ show('loginMsg','Giriş başarısız: kullanıcı adı veya şifre hatalı.',false); return; }
+  enterApp();
+};
+document.getElementById('lpass').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btnLogin').click();});
+document.getElementById('btnLogout').onclick=doLogout;
+async function doLogout(){ await sb.auth.signOut(); location.reload(); }
+
+function showTab(t){
+  document.getElementById('tabResp').classList.toggle('active',t==='resp');
+  document.getElementById('tabRev').classList.toggle('active',t==='rev');
+  document.getElementById('secResp').classList.toggle('hide',t!=='resp');
+  document.getElementById('secRev').classList.toggle('hide',t!=='rev');
+  document.getElementById('respForm').classList.add('hide');
+  document.getElementById('revForm').classList.add('hide');
+}
+
+// ── Yanıtlarım ──────────────────────────────────────────────
+async function loadResponses(){
+  var {data,error}=await sb.from(TBL_RESPONSES).select('*').order('created_at',{ascending:false});
+  if(error){ show('globalMsg','Yanıtlar alınamadı: '+error.message,false); return; }
+  RESP=data||[]; renderResponses();
+}
+function statusPill(r){
+  if(r.locked) return '<span class="pill locked">Onaylandı (kilitli)</span>';
+  if(r.status==='submitted') return '<span class="pill submitted">Onay bekliyor</span>';
+  return '<span class="pill draft">Taslak</span>';
+}
+function renderResponses(){
+  document.getElementById('respCount').textContent=RESP.length+' yanıt';
+  var el=document.getElementById('respList');
+  if(!RESP.length){ el.innerHTML='<div class="muted">Henüz yanıt yok. "+ Yeni Yanıt" ile ekleyin.</div>'; return; }
+  el.innerHTML=RESP.map(function(r){
+    var id=firstVal(r.data,['fnv07eqsz'])||'(ID yok)';
+    var when=(r.created_at||'').slice(0,10);
+    return '<div class="card"><div class="row"><div><b>Su Kuyusu ID: '+esc(id)+'</b><div class="muted">'+esc(when)+'</div></div>'+
+      '<div class="row" style="gap:8px;">'+statusPill(r)+
+      '<button class="btn ghost sm" onclick="openResponse('+r.id+')">'+(r.locked?'Görüntüle':'Düzenle')+'</button></div></div></div>';
+  }).join('');
+}
+function firstVal(data,keys){ if(!data) return ''; for(var i=0;i<keys.length;i++){ if(data[keys[i]]!=null&&data[keys[i]]!=='') return data[keys[i]]; } return ''; }
+
+function openResponse(id){
+  editingResp = (id==null)?null:RESP.filter(function(x){return x.id===id;})[0];
+  var locked = editingResp && editingResp.locked;
+  document.getElementById('respFormTitle').textContent = id==null?'Yeni Yanıt':'Yanıt #'+id;
+  document.getElementById('respLockNote').classList.toggle('hide',!locked);
+  document.getElementById('respFormActions').classList.toggle('hide',!!locked);
+  hideMsg('respFormMsg');
+  renderFields((editingResp&&editingResp.data)||{}, locked);
+  document.getElementById('secResp').classList.add('hide');
+  document.getElementById('respForm').classList.remove('hide');
+}
+function closeResponse(){ document.getElementById('respForm').classList.add('hide'); document.getElementById('secResp').classList.remove('hide'); }
+
+function renderFields(data, disabled){
+  var html=OTTER_FORM.fields.map(function(f){ return fieldHTML(f, data[f.id], disabled); }).join('');
+  document.getElementById('fields').innerHTML=html;
+}
+function fieldHTML(f, val, dis){
+  var d = dis?' disabled':'';
+  var lab='<label class="fl">'+esc(f.label)+(f.required?' <span class="req">*</span>':'')+'</label>';
+  if(f.type==='textarea') return lab+'<textarea data-fid="'+f.id+'"'+d+'>'+esc(val||'')+'</textarea>';
+  if(f.type==='date') return lab+'<input type="date" data-fid="'+f.id+'" value="'+esc(val||'')+'"'+d+'/>';
+  if(f.type==='dropdown'){
+    var opts='<option value="">— seçin —</option>'+f.options.map(function(o){return '<option'+(o===val?' selected':'')+'>'+esc(o)+'</option>';}).join('');
+    return lab+'<select data-fid="'+f.id+'"'+d+'>'+opts+'</select>';
+  }
+  if(f.type==='radio'){
+    var rs=f.options.map(function(o){return '<label><input type="radio" name="'+f.id+'" value="'+esc(o)+'"'+(o===val?' checked':'')+d+'/> '+esc(o)+'</label>';}).join('');
+    return lab+'<div class="opts" data-fid="'+f.id+'" data-kind="radio">'+rs+'</div>';
+  }
+  if(f.type==='checkbox'){
+    var arr=Array.isArray(val)?val:(val?[val]:[]);
+    var cs=f.options.map(function(o){return '<label><input type="checkbox" value="'+esc(o)+'"'+(arr.indexOf(o)>=0?' checked':'')+d+'/> '+esc(o)+'</label>';}).join('');
+    return lab+'<div class="opts" data-fid="'+f.id+'" data-kind="checkbox">'+cs+'</div>';
+  }
+  return lab+'<input type="text" data-fid="'+f.id+'" value="'+esc(val||'')+'"'+d+'/>';
+}
+function collectFields(){
+  var out={};
+  OTTER_FORM.fields.forEach(function(f){
+    if(f.type==='radio'){ var c=document.querySelector('[data-fid="'+f.id+'"][data-kind="radio"] input:checked'); out[f.id]=c?c.value:''; }
+    else if(f.type==='checkbox'){ out[f.id]=[].slice.call(document.querySelectorAll('[data-fid="'+f.id+'"][data-kind="checkbox"] input:checked')).map(function(i){return i.value;}); }
+    else { var el=document.querySelector('[data-fid="'+f.id+'"]'); out[f.id]=el?el.value:''; }
+  });
+  return out;
+}
+function validateRequired(data){
+  for(var i=0;i<OTTER_FORM.fields.length;i++){ var f=OTTER_FORM.fields[i];
+    if(f.required){ var v=data[f.id]; if(v==null||v===''||(Array.isArray(v)&&!v.length)) return f.label; } }
+  return null;
+}
+async function saveResponse(submit){
+  var data=collectFields();
+  if(submit){ var miss=validateRequired(data); if(miss){ show('respFormMsg','Zorunlu alan boş: '+miss,false); return; } }
+  var status=submit?'submitted':'draft';
+  var btnD=document.getElementById('btnSaveDraft'), btnS=document.getElementById('btnSubmit');
+  btnD.disabled=btnS.disabled=true;
+  var res;
+  if(editingResp){ res=await sb.from(TBL_RESPONSES).update({data:data,status:status}).eq('id',editingResp.id); }
+  else { res=await sb.from(TBL_RESPONSES).insert({owner_username:ME.username,form_id:OTTER_FORM.form_id,data:data,status:status}); }
+  btnD.disabled=btnS.disabled=false;
+  if(res.error){ show('respFormMsg','Kaydedilemedi: '+res.error.message,false); return; }
+  show('respFormMsg',submit?'Gönderildi, admin onayına düştü.':'Taslak kaydedildi.',true);
+  await loadResponses(); setTimeout(closeResponse,700);
+}
+document.getElementById('btnSaveDraft').onclick=function(){saveResponse(false);};
+document.getElementById('btnSubmit').onclick=function(){saveResponse(true);};
+
+// ── Revizyonlar ─────────────────────────────────────────────
+async function loadRevisions(){
+  var {data,error}=await sb.from(TBL_REVISIONS).select('*').order('created_at',{ascending:false});
+  if(error){ return; }
+  REV=data||[]; renderRevisions();
+}
+function renderRevisions(){
+  document.getElementById('revCount').textContent=REV.length+' atama';
+  var el=document.getElementById('revList');
+  if(!REV.length){ el.innerHTML='<div class="muted">Size atanan revizyon yok.</div>'; return; }
+  el.innerHTML=REV.map(function(r){
+    var pill=r.status==='revised'?'<span class="pill revised">Gönderildi</span>':'<span class="pill assigned">Bekliyor</span>';
+    var flds=(r.fields||[]).map(function(k){return REVISABLE_LABELS[k]||k;}).join(', ');
+    return '<div class="card"><div class="row"><div><b>Fizibilite: '+esc(r.feas_id)+'</b>'+
+      '<div class="muted">Alanlar: '+esc(flds)+'</div></div>'+
+      '<div class="row" style="gap:8px;">'+pill+
+      '<button class="btn ghost sm" onclick="openRevision('+r.id+')">'+(r.status==='revised'?'Görüntüle/Düzenle':'Revize Et')+'</button></div></div></div>';
+  }).join('');
+}
+function openRevision(id){
+  editingRev=REV.filter(function(x){return x.id===id;})[0]; if(!editingRev) return;
+  document.getElementById('revFormTitle').textContent='Fizibilite: '+editingRev.feas_id;
+  document.getElementById('revNote').textContent=editingRev.note?('Not: '+editingRev.note):'';
+  hideMsg('revFormMsg');
+  var cur=editingRev.revised&&Object.keys(editingRev.revised).length?editingRev.revised:editingRev.current||{};
+  var html=(editingRev.fields||[]).map(function(k){
+    var lbl=REVISABLE_LABELS[k]||k;
+    return '<label class="fl">'+esc(lbl)+'</label><input type="text" data-rk="'+k+'" value="'+esc(cur[k]||'')+'"/>';
+  }).join('');
+  document.getElementById('revFields').innerHTML=html;
+  document.getElementById('secRev').classList.add('hide');
+  document.getElementById('revForm').classList.remove('hide');
+}
+function closeRevision(){ document.getElementById('revForm').classList.add('hide'); document.getElementById('secRev').classList.remove('hide'); }
+document.getElementById('btnRevSave').onclick=async function(){
+  var revised={};
+  [].slice.call(document.querySelectorAll('[data-rk]')).forEach(function(i){revised[i.getAttribute('data-rk')]=i.value;});
+  this.disabled=true;
+  var res=await sb.from(TBL_REVISIONS).update({revised:revised,status:'revised'}).eq('id',editingRev.id);
+  this.disabled=false;
+  if(res.error){ show('revFormMsg','Gönderilemedi: '+res.error.message,false); return; }
+  show('revFormMsg','Revize gönderildi; ana uygulamaya aktarılacak.',true);
+  await loadRevisions(); setTimeout(closeRevision,700);
+};
+
+init();
+</script>
+</body>
+</html>
