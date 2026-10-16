@@ -34,6 +34,13 @@ input[type=text],input[type=date],input[type=password],select,textarea{width:100
 textarea{min-height:80px;resize:vertical;}
 .opts label{display:block;font-size:14px;padding:5px 0;cursor:pointer;}
 .opts input{margin-right:8px;}
+.dtwrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;}
+table.dt{width:100%;border-collapse:collapse;font-size:13px;min-width:420px;}
+table.dt th,table.dt td{border:1px solid var(--border);padding:7px 8px;text-align:left;}
+table.dt th{background:var(--card3);color:var(--text2);font-weight:500;}
+table.dt td.dtrow{background:var(--card2);color:var(--text2);white-space:nowrap;}
+table.dt select{min-width:150px;padding:6px;}
+table.dt input[type=checkbox]{width:18px;height:18px;}
 .msg{font-size:13px;padding:10px 14px;border-radius:8px;margin:10px 0;display:none;}
 .msg.show{display:block;}
 .msg.ok{background:rgba(46,193,107,.12);color:var(--ok);}
@@ -230,16 +237,54 @@ function fieldHTML(f, val, dis){
     var cs=f.options.map(function(o){return '<label><input type="checkbox" value="'+esc(o)+'"'+(arr.indexOf(o)>=0?' checked':'')+d+'/> '+esc(o)+'</label>';}).join('');
     return lab+'<div class="opts" data-fid="'+f.id+'" data-kind="checkbox">'+cs+'</div>';
   }
+  if(f.type==='datatable'){ return lab+datatableHTML(f, val, dis); }
   return lab+'<input type="text" data-fid="'+f.id+'" value="'+esc(val||'')+'"'+d+'/>';
+}
+function datatableHTML(f, val, dis){
+  var d=dis?' disabled':'';
+  var cols=f.columns||[], rl=f.rowLabels||[], nrows=f.rows||rl.length;
+  var saved=(val&&val.rows)?val.rows:[];
+  var head='<tr><th></th>'+cols.map(function(c){return '<th>'+esc(c.label)+'</th>';}).join('')+'</tr>';
+  var body='';
+  for(var i=0;i<nrows;i++){
+    var rs=saved[i]||{};
+    body+='<tr><td class="dtrow">'+esc(rl[i]||('Satır '+(i+1)))+'</td>';
+    for(var j=0;j<cols.length;j++){
+      var c=cols[j], cv=rs['col'+j], attr='data-dt="'+f.id+'" data-row="'+i+'" data-col="'+j+'"';
+      if(c.type==='checkbox'){
+        var ck=(Array.isArray(cv)&&cv.length)?' checked':'';
+        body+='<td style="text-align:center"><input type="checkbox" '+attr+' data-lbl="'+esc(c.label)+'"'+ck+d+'/></td>';
+      } else {
+        var opts='<option value="">—</option>'+(c.options||[]).map(function(o){return '<option'+(o===cv?' selected':'')+'>'+esc(o)+'</option>';}).join('');
+        body+='<td><select '+attr+d+'>'+opts+'</select></td>';
+      }
+    }
+    body+='</tr>';
+  }
+  return '<div class="dtwrap"><table class="dt"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
 }
 function collectFields(){
   var out={};
   OTTER_FORM.fields.forEach(function(f){
     if(f.type==='radio'){ var c=document.querySelector('[data-fid="'+f.id+'"][data-kind="radio"] input:checked'); out[f.id]=c?c.value:''; }
     else if(f.type==='checkbox'){ out[f.id]=[].slice.call(document.querySelectorAll('[data-fid="'+f.id+'"][data-kind="checkbox"] input:checked')).map(function(i){return i.value;}); }
+    else if(f.type==='datatable'){ out[f.id]=collectDatatable(f); }
     else { var el=document.querySelector('[data-fid="'+f.id+'"]'); out[f.id]=el?el.value:''; }
   });
   return out;
+}
+function collectDatatable(f){
+  var cols=f.columns||[], nrows=f.rows||(f.rowLabels||[]).length, rows=[];
+  for(var i=0;i<nrows;i++){
+    var row={};
+    for(var j=0;j<cols.length;j++){
+      var el=document.querySelector('[data-dt="'+f.id+'"][data-row="'+i+'"][data-col="'+j+'"]');
+      if(cols[j].type==='checkbox'){ row['col'+j]=(el&&el.checked)?[el.getAttribute('data-lbl')]:[]; }
+      else { row['col'+j]=el?el.value:''; }
+    }
+    rows.push(row);
+  }
+  return {rows:rows};
 }
 function validateRequired(data){
   for(var i=0;i<OTTER_FORM.fields.length;i++){ var f=OTTER_FORM.fields[i];
