@@ -4,6 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>OTTER Saha Portalı</title>
+<link rel="manifest" href="manifest.webmanifest"/>
+<meta name="theme-color" content="#00B9C6"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="OTTER Saha"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<link rel="icon" href="icon-192.png"/>
 <style>
 :root{--bg:#0d0f14;--card:#161a22;--card2:#1a1f2b;--card3:#1e2330;--border:#252b38;--accent:#00B9C6;--text:#f0ede8;--text2:#c8c4bc;--muted:#7a8099;--input:#1d2130;--ok:#2ec16b;--err:#e05c6b;--warn:#e0a06b;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -23,6 +30,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
 .pill{font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600;}
+.pill.online{background:rgba(46,193,107,.18);color:var(--ok);}
+.pill.offline{background:rgba(224,160,107,.18);color:var(--warn);}
 .pill.draft{background:rgba(224,160,107,.18);color:var(--warn);}
 .pill.submitted{background:rgba(0,185,198,.18);color:var(--accent);}
 .pill.locked{background:rgba(46,193,107,.18);color:var(--ok);}
@@ -73,7 +82,9 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
   <div id="appView" class="hide">
     <header>
       <span class="brand">OTTER Saha Portalı</span>
-      <span class="row" style="gap:12px;"><span class="who" id="whoami"></span>
+      <span class="row" style="gap:12px;">
+        <span id="netChip" class="pill" style="display:none;"></span>
+        <span class="who" id="whoami"></span>
         <button class="btn ghost sm" id="btnLogout">Çıkış</button></span>
     </header>
     <div class="tabs">
@@ -127,8 +138,8 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=2"></script>
-<script src="form-schema.js?v=2"></script>
+<script src="config.js?v=3"></script>
+<script src="form-schema.js?v=3"></script>
 <script>
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 var ME = null;             // {username}
@@ -151,7 +162,9 @@ async function enterApp(){
   document.getElementById('loginView').classList.add('hide');
   document.getElementById('appView').classList.remove('hide');
   document.getElementById('whoami').textContent=ME.username;
+  updateNet();                               // ağ göstergesi
   showTab('resp'); loadResponses(); loadRevisions();
+  flushOutbox();                             // giriş sonrası bekleyenleri gönder
 }
 document.getElementById('btnLogin').onclick=async function(){
   hideMsg('loginMsg');
@@ -179,9 +192,16 @@ function showTab(t){
 
 // ── Yanıtlarım ──────────────────────────────────────────────
 async function loadResponses(){
-  var {data,error}=await sb.from(TBL_RESPONSES).select('*').order('created_at',{ascending:false});
-  if(error){ show('globalMsg','Yanıtlar alınamadı: '+error.message,false); return; }
-  RESP=data||[]; renderResponses();
+  try{
+    var {data,error}=await sb.from(TBL_RESPONSES).select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    RESP=data||[]; try{localStorage.setItem('otter_resp_cache',JSON.stringify(RESP));}catch(e){}
+    renderResponses();
+  }catch(e){
+    try{ RESP=JSON.parse(localStorage.getItem('otter_resp_cache')||'[]')||[]; }catch(_){ RESP=[]; }
+    renderResponses();
+    if(!navigator.onLine) show('globalMsg','Çevrimdışı — son kaydedilen liste gösteriliyor.',true);
+  }
 }
 function statusPill(r){
   if(r.locked) return '<span class="pill locked">Onaylandı (kilitli)</span>';
@@ -297,11 +317,13 @@ async function saveResponse(submit){
   var status=submit?'submitted':'draft';
   var btnD=document.getElementById('btnSaveDraft'), btnS=document.getElementById('btnSubmit');
   btnD.disabled=btnS.disabled=true;
-  var res;
-  if(editingResp){ res=await sb.from(TBL_RESPONSES).update({data:data,status:status}).eq('id',editingResp.id); }
-  else { res=await sb.from(TBL_RESPONSES).insert({owner_username:ME.username,form_id:OTTER_FORM.form_id,data:data,status:status}); }
+  var item=editingResp
+    ? {kind:'resp_update', id:editingResp.id, body:{data:data,status:status}}
+    : {kind:'resp_insert', body:{owner_username:ME.username,form_id:OTTER_FORM.form_id,data:data,status:status}};
+  var out=await sendWrite(function(){ return applyItem(item); }, item);
   btnD.disabled=btnS.disabled=false;
-  if(res.error){ show('respFormMsg','Kaydedilemedi: '+res.error.message,false); return; }
+  if(out.error){ show('respFormMsg','Kaydedilemedi: '+out.error.message,false); return; }
+  if(out.queued){ show('respFormMsg','Çevrimdışı kaydedildi — internet gelince gönderilecek.',true); updateNet(); setTimeout(closeResponse,900); return; }
   show('respFormMsg',submit?'Gönderildi, admin onayına düştü.':'Taslak kaydedildi.',true);
   await loadResponses(); setTimeout(closeResponse,700);
 }
@@ -310,9 +332,15 @@ document.getElementById('btnSubmit').onclick=function(){saveResponse(true);};
 
 // ── Revizyonlar ─────────────────────────────────────────────
 async function loadRevisions(){
-  var {data,error}=await sb.from(TBL_REVISIONS).select('*').order('created_at',{ascending:false});
-  if(error){ return; }
-  REV=data||[]; renderRevisions();
+  try{
+    var {data,error}=await sb.from(TBL_REVISIONS).select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    REV=data||[]; try{localStorage.setItem('otter_rev_cache',JSON.stringify(REV));}catch(e){}
+    renderRevisions();
+  }catch(e){
+    try{ REV=JSON.parse(localStorage.getItem('otter_rev_cache')||'[]')||[]; }catch(_){ REV=[]; }
+    renderRevisions();
+  }
 }
 function renderRevisions(){
   document.getElementById('revCount').textContent=REV.length+' atama';
@@ -346,12 +374,58 @@ document.getElementById('btnRevSave').onclick=async function(){
   var revised={};
   [].slice.call(document.querySelectorAll('[data-rk]')).forEach(function(i){revised[i.getAttribute('data-rk')]=i.value;});
   this.disabled=true;
-  var res=await sb.from(TBL_REVISIONS).update({revised:revised,status:'revised'}).eq('id',editingRev.id);
+  var item={kind:'rev_update', id:editingRev.id, body:{revised:revised,status:'revised'}};
+  var out=await sendWrite(function(){ return applyItem(item); }, item);
   this.disabled=false;
-  if(res.error){ show('revFormMsg','Gönderilemedi: '+res.error.message,false); return; }
+  if(out.error){ show('revFormMsg','Gönderilemedi: '+out.error.message,false); return; }
+  if(out.queued){ show('revFormMsg','Çevrimdışı kaydedildi — internet gelince gönderilecek.',true); updateNet(); setTimeout(closeRevision,900); return; }
   show('revFormMsg','Revize gönderildi; ana uygulamaya aktarılacak.',true);
   await loadRevisions(); setTimeout(closeRevision,700);
 };
+
+// ── Çevrimdışı kuyruk + ağ göstergesi + Service Worker ──────
+var OUTBOX_KEY='otter_outbox';
+function getOutbox(){ try{return JSON.parse(localStorage.getItem(OUTBOX_KEY)||'[]')||[];}catch(e){return [];} }
+function setOutbox(a){ try{localStorage.setItem(OUTBOX_KEY,JSON.stringify(a||[]));}catch(e){} }
+function enqueue(it){ var q=getOutbox(); it.ts=Date.now(); q.push(it); setOutbox(q); }
+function outboxCount(){ return getOutbox().length; }
+function applyItem(it){
+  if(it.kind==='resp_insert') return sb.from(TBL_RESPONSES).insert(it.body);
+  if(it.kind==='resp_update') return sb.from(TBL_RESPONSES).update(it.body).eq('id',it.id);
+  if(it.kind==='rev_update')  return sb.from(TBL_REVISIONS).update(it.body).eq('id',it.id);
+  return Promise.resolve({error:{message:'bilinmeyen işlem'}});
+}
+// Çevrimdışı ya da ağ hatası → kuyruğa; sunucu (RLS/doğrulama) hatası → mesaj
+async function sendWrite(doSend, queueItem){
+  if(!navigator.onLine){ enqueue(queueItem); return {queued:true}; }
+  try{ var res=await doSend(); if(res && res.error) return {error:res.error}; return {ok:true}; }
+  catch(e){ enqueue(queueItem); return {queued:true}; }   // fetch/ağ kopması
+}
+async function flushOutbox(){
+  if(!navigator.onLine) return;
+  var q=getOutbox(); if(!q.length) return;
+  var remaining=[], sent=0;
+  for(var i=0;i<q.length;i++){
+    try{ var res=await applyItem(q[i]);
+      if(res && res.error){ /* sunucu reddetti → at (sonsuz tekrar olmasın) */ }
+      else sent++;
+    }catch(e){ remaining.push(q[i]); }                     // ağ hatası → beklet
+  }
+  setOutbox(remaining); updateNet();
+  if(sent){ show('globalMsg',sent+' bekleyen kayıt gönderildi.',true); loadResponses(); loadRevisions(); }
+}
+function updateNet(){
+  var chip=document.getElementById('netChip'); if(!chip) return;
+  var n=outboxCount();
+  chip.className='pill '+(navigator.onLine?'online':'offline');
+  chip.textContent=(navigator.onLine?'● Çevrimiçi':'● Çevrimdışı')+(n?(' · '+n+' bekliyor'):'');
+  chip.style.display='inline-block';
+}
+window.addEventListener('online', function(){ updateNet(); flushOutbox(); });
+window.addEventListener('offline', updateNet);
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
 
 init();
 </script>
