@@ -152,13 +152,17 @@ function hideMsg(el){document.getElementById(el).className='msg';}
 
 // ── Oturum ──────────────────────────────────────────────────
 async function init(){
-  var {data}=await sb.auth.getSession();
-  if(data && data.session){ await enterApp(); } else { document.getElementById('loginView').classList.remove('hide'); }
+  var user=null;
+  try{ var {data}=await sb.auth.getSession(); user=data&&data.session&&data.session.user; }catch(e){}
+  if(user){ enterApp(user); }
+  else { document.getElementById('loginView').classList.remove('hide'); }
 }
-async function enterApp(){
-  var {data}=await sb.auth.getUser();
-  var u=data && data.user; if(!u){ return doLogout(); }
-  ME={username:(u.user_metadata&&u.user_metadata.username)||(u.email||'').split('@')[0]};
+// ÖNEMLİ: getUser() AĞ çağrısıdır → çevrimdışı başarısız olup çıkışa yol açar.
+// Bunun yerine YEREL oturumdaki kullanıcıyı kullan (getSession ağ gerektirmez).
+async function enterApp(user){
+  if(!user){ try{ var {data}=await sb.auth.getSession(); user=data&&data.session&&data.session.user; }catch(e){} }
+  if(!user){ document.getElementById('loginView').classList.remove('hide'); return; }
+  ME={username:(user.user_metadata&&user.user_metadata.username)||(user.email||'').split('@')[0]};
   document.getElementById('loginView').classList.add('hide');
   document.getElementById('appView').classList.remove('hide');
   document.getElementById('whoami').textContent=ME.username;
@@ -172,10 +176,10 @@ document.getElementById('btnLogin').onclick=async function(){
   var pass=document.getElementById('lpass').value;
   if(!user||!pass){ show('loginMsg','Kullanıcı adı ve şifre gerekli.',false); return; }
   this.disabled=true;
-  var {error}=await sb.auth.signInWithPassword({email:user+'@'+EMAIL_DOMAIN,password:pass});
+  var {data,error}=await sb.auth.signInWithPassword({email:user+'@'+EMAIL_DOMAIN,password:pass});
   this.disabled=false;
   if(error){ show('loginMsg','Giriş başarısız: kullanıcı adı veya şifre hatalı.',false); return; }
-  enterApp();
+  enterApp(data&&data.user);
 };
 document.getElementById('lpass').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btnLogin').click();});
 document.getElementById('btnLogout').onclick=doLogout;
