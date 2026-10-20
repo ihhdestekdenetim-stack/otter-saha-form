@@ -11,6 +11,9 @@
 <meta name="apple-mobile-web-app-title" content="OTTER Saha"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
 <link rel="icon" href="icon-192.png"/>
+<link rel="stylesheet" href="leaflet.css?v=4"/>
+<link rel="stylesheet" href="MarkerCluster.css?v=4"/>
+<link rel="stylesheet" href="MarkerCluster.Default.css?v=4"/>
 <style>
 :root{--bg:#0d0f14;--card:#161a22;--card2:#1a1f2b;--card3:#1e2330;--border:#252b38;--accent:#00B9C6;--text:#f0ede8;--text2:#c8c4bc;--muted:#7a8099;--input:#1d2130;--ok:#2ec16b;--err:#e05c6b;--warn:#e0a06b;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -90,6 +93,7 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     <div class="tabs">
       <button class="tab active" id="tabResp" onclick="showTab('resp')">Yanıtlarım</button>
       <button class="tab" id="tabRev" onclick="showTab('rev')">Bana Atanan Revizyonlar</button>
+      <button class="tab" id="tabMap" onclick="showTab('map')">Koordinat Teyidi</button>
     </div>
     <div id="globalMsg" class="msg"></div>
 
@@ -106,6 +110,18 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     <section id="secRev" class="hide">
       <div class="muted" id="revCount" style="margin-bottom:12px;"></div>
       <div id="revList"></div>
+    </section>
+
+    <!-- Koordinat Teyidi (çevrimdışı harita + GPS + mevcut kuyular) -->
+    <section id="secMap" class="hide">
+      <div class="row" style="margin-bottom:10px;gap:8px;flex-wrap:wrap;">
+        <button class="btn" id="btnLocate">📍 Konumumu Bul</button>
+        <button class="btn ghost" id="btnWellsRefresh" title="Kuyuları buluttan güncelle (çevrimiçiyken)">⟳ Kuyuları Güncelle</button>
+        <span class="muted" id="wellsInfo"></span>
+      </div>
+      <div id="map" style="height:62vh;min-height:360px;border:1px solid var(--border);border-radius:12px;background:#0a0c10;"></div>
+      <div id="nearList" style="margin-top:12px;"></div>
+      <div class="muted" style="margin-top:8px;font-size:12px;">Not: Harita karoları çevrimdışı çalışsın diye o bölgeyi bir kez çevrimiçiyken görüntüleyin. GPS internet gerektirmez.</div>
     </section>
 
     <!-- Form paneli (yanıt doldur/düzenle) -->
@@ -138,8 +154,10 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="config.js?v=3"></script>
-<script src="form-schema.js?v=3"></script>
+<script src="leaflet.js?v=4"></script>
+<script src="markercluster.js?v=4"></script>
+<script src="config.js?v=4"></script>
+<script src="form-schema.js?v=4"></script>
 <script>
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 var ME = null;             // {username}
@@ -188,8 +206,11 @@ async function doLogout(){ await sb.auth.signOut(); location.reload(); }
 function showTab(t){
   document.getElementById('tabResp').classList.toggle('active',t==='resp');
   document.getElementById('tabRev').classList.toggle('active',t==='rev');
+  document.getElementById('tabMap').classList.toggle('active',t==='map');
   document.getElementById('secResp').classList.toggle('hide',t!=='resp');
   document.getElementById('secRev').classList.toggle('hide',t!=='rev');
+  document.getElementById('secMap').classList.toggle('hide',t!=='map');
+  if(t==='map') initMapTab();
   document.getElementById('respForm').classList.add('hide');
   document.getElementById('revForm').classList.add('hide');
 }
@@ -430,6 +451,74 @@ window.addEventListener('offline', updateNet);
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
 }
+
+// ── Koordinat Teyidi: çevrimdışı harita + GPS + mevcut kuyular ──
+var MAP=null, WCLUSTER=null, WELLS=[], userMarker=null, userCircle=null, _mapInited=false, _firstFix=true, _watchId=null;
+function idb(){ return new Promise(function(res,rej){ var r=indexedDB.open('otter_portal',1);
+  r.onupgradeneeded=function(){ r.result.createObjectStore('kv'); };
+  r.onsuccess=function(){ res(r.result); }; r.onerror=function(){ rej(r.error); }; }); }
+function idbGet(k){ return idb().then(function(db){ return new Promise(function(res){ var t=db.transaction('kv').objectStore('kv').get(k); t.onsuccess=function(){res(t.result);}; t.onerror=function(){res(null);}; }); }).catch(function(){return null;}); }
+function idbSet(k,v){ return idb().then(function(db){ return new Promise(function(res){ var t=db.transaction('kv','readwrite').objectStore('kv').put(v,k); t.onsuccess=function(){res(true);}; t.onerror=function(){res(false);}; }); }).catch(function(){return false;}); }
+function haversine(a,b,c,d){ var R=6371000,p=Math.PI/180,dLat=(c-a)*p,dLon=(d-b)*p; var x=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(a*p)*Math.cos(c*p)*Math.sin(dLon/2)*Math.sin(dLon/2); return 2*R*Math.asin(Math.min(1,Math.sqrt(x))); }
+
+async function loadWells(forceOnline){
+  if(!forceOnline){ var cached=await idbGet('wells'); if(cached&&cached.wells&&cached.wells.length){ WELLS=cached.wells; return {from:'cache',ts:cached.ts}; } }
+  if(!navigator.onLine){ var c2=await idbGet('wells'); if(c2&&c2.wells){ WELLS=c2.wells; return {from:'cache'}; } return {from:'none'}; }
+  var all=[], page=0, size=1000;
+  while(page<=50){
+    var r=await sb.from('wells').select('well_id,lat,lon,name').range(page*size,page*size+size-1);
+    if(r.error) break;
+    var rows=r.data||[]; all=all.concat(rows.map(function(w){return [w.lat,w.lon,w.well_id,w.name];}));
+    if(rows.length<size) break; page++;
+  }
+  if(all.length){ WELLS=all; await idbSet('wells',{wells:all,ts:Date.now()}); return {from:'online',count:all.length}; }
+  var c3=await idbGet('wells'); if(c3&&c3.wells){ WELLS=c3.wells; return {from:'cache'}; }
+  return {from:'none'};
+}
+async function initMapTab(){
+  if(!_mapInited){
+    _mapInited=true;
+    MAP=L.map('map',{minZoom:2,maxZoom:19}).setView([20,10],3);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,attribution:'Kaynak: Esri, Maxar'}).addTo(MAP);
+    WCLUSTER=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:60}); MAP.addLayer(WCLUSTER);
+    var info=document.getElementById('wellsInfo'); info.textContent='Kuyular yükleniyor…';
+    var res=await loadWells(false); renderWells();
+    info.textContent=(res.from==='none')?'Kuyu verisi yok — çevrimiçiyken "Kuyuları Güncelle".':(WELLS.length+' kuyu'+(res.from==='cache'?' (önbellek)':(res.from==='online'?' (güncel)':'')));
+  }
+  setTimeout(function(){ if(MAP) MAP.invalidateSize(); },150);
+}
+function renderWells(){
+  if(!WCLUSTER) return; WCLUSTER.clearLayers();
+  WELLS.forEach(function(w){ var m=L.circleMarker([w[0],w[1]],{radius:5,color:'#2e74e0',fillColor:'#2e74e0',weight:1.5,fillOpacity:.7});
+    m.bindPopup('<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')); WCLUSTER.addLayer(m); });
+}
+function startGPS(){
+  if(!navigator.geolocation){ show('globalMsg','Cihaz konum (GPS) desteklemiyor.',false); return; }
+  if(_watchId!=null) navigator.geolocation.clearWatch(_watchId);
+  _firstFix=true;
+  _watchId=navigator.geolocation.watchPosition(function(p){
+    var lat=p.coords.latitude, lon=p.coords.longitude, acc=p.coords.accuracy||0;
+    if(!userMarker){ userMarker=L.circleMarker([lat,lon],{radius:7,color:'#e05c6b',fillColor:'#e05c6b',weight:2,fillOpacity:.9}).addTo(MAP).bindPopup('Bulunduğun nokta'); }
+    else userMarker.setLatLng([lat,lon]);
+    if(!userCircle){ userCircle=L.circle([lat,lon],{radius:acc,color:'#e05c6b',weight:1,fillOpacity:.08}).addTo(MAP); }
+    else { userCircle.setLatLng([lat,lon]); userCircle.setRadius(acc); }
+    if(_firstFix){ _firstFix=false; MAP.setView([lat,lon],15); }
+    showNearest(lat,lon,acc);
+  }, function(err){ show('globalMsg','Konum alınamadı: '+err.message,false); }, {enableHighAccuracy:true,maximumAge:3000,timeout:20000});
+}
+function showNearest(lat,lon,acc){
+  var arr=WELLS.map(function(w){ return {w:w,d:haversine(lat,lon,w[0],w[1])}; }).sort(function(a,b){return a.d-b.d;}).slice(0,5);
+  var html='<div class="muted" style="margin-bottom:6px;">Konum: '+lat.toFixed(6)+', '+lon.toFixed(6)+' (±'+Math.round(acc)+' m)</div>';
+  html+=arr.map(function(x){ var dm=x.d<1000?(Math.round(x.d)+' m'):((x.d/1000).toFixed(2)+' km');
+    return '<div class="card" style="padding:8px 12px;"><div class="row"><div><b>'+esc(x.w[2])+'</b> <span class="muted">'+esc((x.w[3]||'').slice(0,42))+'</span></div><span class="pill" style="background:rgba(0,185,198,.18);color:var(--accent);">'+dm+'</span></div></div>'; }).join('');
+  document.getElementById('nearList').innerHTML=html||'<div class="muted">Yakında kuyu yok.</div>';
+}
+document.getElementById('btnLocate').onclick=function(){ startGPS(); };
+document.getElementById('btnWellsRefresh').onclick=async function(){ var self=this; self.disabled=true; document.getElementById('wellsInfo').textContent='Güncelleniyor…';
+  var res=await loadWells(true); renderWells(); self.disabled=false;
+  document.getElementById('wellsInfo').textContent=(res.from==='online')?(WELLS.length+' kuyu (güncel)'):(WELLS.length+' kuyu');
+  show('globalMsg',res.from==='online'?'Kuyular güncellendi.':'Güncellenemedi (çevrimdışı).',res.from==='online');
+};
 
 init();
 </script>

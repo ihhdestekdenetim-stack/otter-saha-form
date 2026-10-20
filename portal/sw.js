@@ -3,15 +3,20 @@
  * Supabase REST/Auth istekleri ASLA önbeklenmez (dinamik + kimlik) → doğrudan ağa gider;
  * çevrimdışı yazmalar uygulamadaki localStorage kuyruğuyla yönetilir.
  */
-var VERSION = "otter-portal-v2";
+var VERSION = "otter-portal-v3";
+var TILES = "otter-tiles";
 var SB_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
 var FILES = [
   "./", "index.html",
-  "config.js?v=3", "form-schema.js?v=3",
+  "config.js?v=4", "form-schema.js?v=4",
   "manifest.webmanifest",
   "icon-192.png", "icon-512.png", "icon-maskable-512.png",
+  "leaflet.js?v=4", "leaflet.css?v=4",
+  "markercluster.js?v=4",
+  "MarkerCluster.css?v=4", "MarkerCluster.Default.css?v=4",
   SB_CDN
 ];
+var TILE_HOSTS = ["server.arcgisonline.com", "tile.openstreetmap.org"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(
@@ -39,6 +44,22 @@ self.addEventListener("fetch", function (e) {
   var req = e.request;
   if (req.method !== "GET") return;                       // POST/PATCH (Supabase yazma) → ağa
   var url = new URL(req.url);
+
+  // Harita karoları (Esri/OSM) → önce-önbellek (çevrimdışı harita)
+  if (TILE_HOSTS.indexOf(url.hostname) >= 0) {
+    e.respondWith(
+      caches.open(TILES).then(function (c) {
+        return c.match(req).then(function (hit) {
+          if (hit) return hit;
+          return fetch(req).then(function (r) {
+            if (r && (r.ok || r.type === "opaque")) c.put(req, r.clone());
+            return r;
+          }).catch(function () { return new Response("", { status: 504 }); });
+        });
+      })
+    );
+    return;
+  }
 
   // supabase-js CDN → önce-önbellek (çevrimdışı açılış için)
   if (req.url === SB_CDN || url.hostname === "cdn.jsdelivr.net") {
