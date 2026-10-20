@@ -143,6 +143,22 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
         </div>
       </div>
       <div class="card" style="margin-top:14px;">
+        <b>Çevrimdışı Harita İndir</b>
+        <div class="muted" style="margin:6px 0 12px;font-size:13px;">Seçtiğin ülkedeki kuyuların çevresindeki uydu karolarını indir; sahada internet olmadan harita açılır. İndirmek için internet gerekir.</div>
+        <label class="fl">Ülke</label>
+        <select id="dlCountry"><option value="">— yükleniyor —</option></select>
+        <div id="dlEstimate" class="muted" style="margin-top:8px;font-size:13px;"></div>
+        <div id="dlProgressWrap" class="hide" style="margin-top:10px;">
+          <div style="height:8px;background:var(--border);border-radius:6px;overflow:hidden;"><div id="dlBar" style="height:100%;width:0;background:var(--accent);transition:width .2s;"></div></div>
+          <div id="dlProgressText" class="muted" style="margin-top:6px;font-size:12px;"></div>
+        </div>
+        <div id="dlMsg" class="msg"></div>
+        <div class="actions" style="margin-top:12px;">
+          <button class="btn ok" id="btnDlMap">Haritayı İndir</button>
+          <button class="btn ghost hide" id="btnDlCancel">İptal</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px;">
         <div class="row">
           <span class="muted">Oturumu bu cihazda kapat.</span>
           <button class="btn ghost" id="btnLogout2">Çıkış Yap</button>
@@ -245,6 +261,7 @@ function renderAccount(){
   hideMsg('acctMsg');
   document.getElementById('acctPass1').value='';
   document.getElementById('acctPass2').value='';
+  populateDlCountries();
 }
 document.getElementById('btnChangePass').onclick=async function(){
   hideMsg('acctMsg');
@@ -262,6 +279,84 @@ document.getElementById('btnChangePass').onclick=async function(){
   this.disabled=false;
 };
 document.getElementById('btnLogout2').onclick=doLogout;
+
+// ── Çevrimdışı harita indirme (ülkeye göre, Esri uydu) ──────
+var ESRI_TPL='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+var DL_ZOOMS=[10,11,12,13,14];
+var DL_CAP=8000;                                   // üst sınır (~175 MB); aşılırsa üst zoom düşürülür
+var _dlBusy=false, _dlCancel=false;
+function lon2x(lon,z){ return Math.floor((lon+180)/360*Math.pow(2,z)); }
+function lat2y(lat,z){ var r=lat*Math.PI/180; return Math.floor((1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*Math.pow(2,z)); }
+function countryWells(c){ return WELLS.filter(function(w){ return (w[4]||'')===c; }); }
+function tilesFor(wells, zooms){
+  var seen={}, out=[];
+  zooms.forEach(function(z){ var mx=Math.pow(2,z)-1;
+    wells.forEach(function(w){ var cx=lon2x(w[1],z), cy=lat2y(w[0],z);
+      for(var dx=-1;dx<=1;dx++) for(var dy=-1;dy<=1;dy++){
+        var x=cx+dx, y=cy+dy; if(x<0||y<0||x>mx||y>mx) continue;
+        var k=z+'/'+x+'/'+y; if(!seen[k]){ seen[k]=1; out.push({z:z,x:x,y:y}); }
+      }
+    });
+  });
+  return out;
+}
+async function populateDlCountries(){
+  var sel=document.getElementById('dlCountry'); if(!sel) return;
+  if(!WELLS.length){ sel.innerHTML='<option value="">— kuyu verisi yükleniyor —</option>'; try{ await loadWells(false); }catch(e){} }
+  if(!WELLS.length){ sel.innerHTML='<option value="">— kuyu verisi yok (Koordinat Teyidi sekmesini bir kez açın) —</option>'; updateDlEstimate(); return; }
+  var counts={}; WELLS.forEach(function(w){ var c=w[4]||''; if(c) counts[c]=(counts[c]||0)+1; });
+  var names=Object.keys(counts).sort(function(a,b){return a.localeCompare(b,'tr');});
+  sel.innerHTML='<option value="">— ülke seçin —</option>'+names.map(function(c){ return '<option value="'+esc(c)+'">'+esc(c)+' ('+counts[c]+' kuyu)</option>'; }).join('');
+  updateDlEstimate();
+}
+function updateDlEstimate(){
+  var c=document.getElementById('dlCountry').value;
+  var est=document.getElementById('dlEstimate'), btn=document.getElementById('btnDlMap');
+  if(!c){ est.textContent=''; btn.textContent='Haritayı İndir'; btn._tiles=null; return; }
+  var ws=countryWells(c), zooms=DL_ZOOMS.slice(), tiles=tilesFor(ws,zooms);
+  while(tiles.length>DL_CAP && zooms.length>1){ zooms.pop(); tiles=tilesFor(ws,zooms); }
+  var mb=(tiles.length*22/1024).toFixed(1);
+  est.textContent=ws.length+' kuyu · z'+zooms[0]+'–z'+zooms[zooms.length-1]+' · ~'+tiles.length+' karo · ~'+mb+' MB';
+  btn.textContent='Haritayı İndir (~'+tiles.length+' karo)'; btn._tiles=tiles;
+}
+async function downloadCountryMaps(){
+  if(_dlBusy) return;
+  var c=document.getElementById('dlCountry').value;
+  if(!c){ show('dlMsg','Önce bir ülke seçin.',false); return; }
+  if(!navigator.onLine){ show('dlMsg','İndirmek için internet gerekir.',false); return; }
+  if(!('caches' in window)){ show('dlMsg','Tarayıcı çevrimdışı önbelleği desteklemiyor.',false); return; }
+  var tiles=document.getElementById('btnDlMap')._tiles; if(!tiles){ updateDlEstimate(); tiles=document.getElementById('btnDlMap')._tiles; }
+  if(!tiles||!tiles.length){ show('dlMsg','İndirilecek karo yok.',false); return; }
+  hideMsg('dlMsg'); _dlBusy=true; _dlCancel=false;
+  document.getElementById('btnDlMap').disabled=true;
+  document.getElementById('btnDlCancel').classList.remove('hide');
+  document.getElementById('dlProgressWrap').classList.remove('hide');
+  var cache=await caches.open('otter-tiles');
+  var total=tiles.length, done=0, ok=0, fail=0, idx=0, CONC=8;
+  function upd(){ var p=Math.round(done/total*100);
+    document.getElementById('dlBar').style.width=p+'%';
+    document.getElementById('dlProgressText').textContent=done+'/'+total+' karo ('+p+'%)'+(fail?(' · '+fail+' hata'):''); }
+  async function worker(){
+    while(idx<tiles.length && !_dlCancel){
+      var t=tiles[idx++];
+      var url=ESRI_TPL.replace('{z}',t.z).replace('{y}',t.y).replace('{x}',t.x);
+      try{ var hit=await cache.match(url);
+        if(hit){ ok++; }
+        else{ var r=await fetch(url,{mode:'no-cors'}); if(r&&(r.ok||r.type==='opaque')){ await cache.put(url,r); ok++; } else fail++; }
+      }catch(e){ fail++; }
+      done++; if(done%8===0||done===total) upd();
+    }
+  }
+  upd(); var ws=[]; for(var i=0;i<CONC;i++) ws.push(worker()); await Promise.all(ws); upd();
+  _dlBusy=false;
+  document.getElementById('btnDlMap').disabled=false;
+  document.getElementById('btnDlCancel').classList.add('hide');
+  if(_dlCancel) show('dlMsg','İndirme durduruldu — '+ok+' karo kaydedildi (saklandı).',true);
+  else show('dlMsg',c+' haritası indirildi: '+ok+' karo kaydedildi'+(fail?(', '+fail+' başarısız'):'')+'. Artık çevrimdışı açılır.',true);
+}
+document.getElementById('dlCountry').onchange=updateDlEstimate;
+document.getElementById('btnDlMap').onclick=downloadCountryMaps;
+document.getElementById('btnDlCancel').onclick=function(){ _dlCancel=true; };
 
 function showTab(t){
   document.getElementById('tabResp').classList.toggle('active',t==='resp');
