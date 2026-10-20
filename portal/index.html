@@ -87,14 +87,13 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
       <span class="brand">OTTER Saha Portalı</span>
       <span class="row" style="gap:12px;">
         <span id="netChip" class="pill" style="display:none;"></span>
-        <span class="who" id="whoami"></span>
+        <span class="who" id="whoami" onclick="showTab('acct')" title="Hesabım" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;"></span>
         <button class="btn ghost sm" id="btnLogout">Çıkış</button></span>
     </header>
     <div class="tabs">
       <button class="tab active" id="tabResp" onclick="showTab('resp')">Yanıtlarım</button>
       <button class="tab" id="tabRev" onclick="showTab('rev')">Bana Atanan Revizyonlar</button>
       <button class="tab" id="tabMap" onclick="showTab('map')">Koordinat Teyidi</button>
-      <button class="tab" id="tabAcct" onclick="showTab('acct')">Hesabım</button>
     </div>
     <div id="globalMsg" class="msg"></div>
 
@@ -268,7 +267,6 @@ function showTab(t){
   document.getElementById('tabResp').classList.toggle('active',t==='resp');
   document.getElementById('tabRev').classList.toggle('active',t==='rev');
   document.getElementById('tabMap').classList.toggle('active',t==='map');
-  document.getElementById('tabAcct').classList.toggle('active',t==='acct');
   document.getElementById('secResp').classList.toggle('hide',t!=='resp');
   document.getElementById('secRev').classList.toggle('hide',t!=='rev');
   document.getElementById('secMap').classList.toggle('hide',t!=='map');
