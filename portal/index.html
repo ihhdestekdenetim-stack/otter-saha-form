@@ -418,6 +418,7 @@ function applyItem(it){
   if(it.kind==='resp_insert') return sb.from(TBL_RESPONSES).insert(it.body);
   if(it.kind==='resp_update') return sb.from(TBL_RESPONSES).update(it.body).eq('id',it.id);
   if(it.kind==='rev_update')  return sb.from(TBL_REVISIONS).update(it.body).eq('id',it.id);
+  if(it.kind==='coord_insert') return sb.from('coord_checks').insert(it.body);
   return Promise.resolve({error:{message:'bilinmeyen işlem'}});
 }
 // Çevrimdışı ya da ağ hatası → kuyruğa; sunucu (RLS/doğrulama) hatası → mesaj
@@ -506,12 +507,30 @@ function startGPS(){
     showNearest(lat,lon,acc);
   }, function(err){ show('globalMsg','Konum alınamadı: '+err.message,false); }, {enableHighAccuracy:true,maximumAge:3000,timeout:20000});
 }
+var _lastFix=null, _nearest=[];
 function showNearest(lat,lon,acc){
-  var arr=WELLS.map(function(w){ return {w:w,d:haversine(lat,lon,w[0],w[1])}; }).sort(function(a,b){return a.d-b.d;}).slice(0,5);
+  _lastFix={lat:lat,lon:lon,acc:acc};
+  _nearest=WELLS.map(function(w){ return {w:w,d:haversine(lat,lon,w[0],w[1])}; }).sort(function(a,b){return a.d-b.d;}).slice(0,5);
   var html='<div class="muted" style="margin-bottom:6px;">Konum: '+lat.toFixed(6)+', '+lon.toFixed(6)+' (±'+Math.round(acc)+' m)</div>';
-  html+=arr.map(function(x){ var dm=x.d<1000?(Math.round(x.d)+' m'):((x.d/1000).toFixed(2)+' km');
-    return '<div class="card" style="padding:8px 12px;"><div class="row"><div><b>'+esc(x.w[2])+'</b> <span class="muted">'+esc((x.w[3]||'').slice(0,42))+'</span></div><span class="pill" style="background:rgba(0,185,198,.18);color:var(--accent);">'+dm+'</span></div></div>'; }).join('');
+  html+=_nearest.map(function(x,i){ var dm=x.d<1000?(Math.round(x.d)+' m'):((x.d/1000).toFixed(2)+' km');
+    return '<div class="card" style="padding:8px 12px;"><div class="row"><div><b>'+esc(x.w[2])+'</b> <span class="muted">'+esc((x.w[3]||'').slice(0,40))+'</span></div>'+
+      '<div class="row" style="gap:8px;"><span class="pill" style="background:rgba(0,185,198,.18);color:var(--accent);">'+dm+'</span>'+
+      '<button class="btn ok" style="padding:5px 10px;font-size:12px;" onclick="saveCoordCheck('+i+')">Teyit Et</button></div></div></div>'; }).join('');
   document.getElementById('nearList').innerHTML=html||'<div class="muted">Yakında kuyu yok.</div>';
+}
+async function saveCoordCheck(i){
+  if(!_lastFix||!_nearest[i]){ show('globalMsg','Önce konumunu bul.',false); return; }
+  var x=_nearest[i];
+  var note=prompt('"'+x.w[2]+'" kuyusu için teyit notu (opsiyonel):','');
+  if(note===null) return;              // vazgeçti
+  var body={owner_username:ME.username, well_id:String(x.w[2]||''), well_name:String(x.w[3]||''),
+            measured_lat:_lastFix.lat, measured_lon:_lastFix.lon, accuracy:Math.round(_lastFix.acc||0),
+            distance_m:Math.round(x.d), note:note||''};
+  var item={kind:'coord_insert', body:body};
+  var out=await sendWrite(function(){ return applyItem(item); }, item);
+  if(out.error){ show('globalMsg','Kaydedilemedi: '+out.error.message,false); return; }
+  if(out.queued){ show('globalMsg','Teyit çevrimdışı kaydedildi — internet gelince gönderilecek.',true); updateNet(); return; }
+  show('globalMsg','Teyit kaydedildi ('+x.w[2]+').',true);
 }
 document.getElementById('btnLocate').onclick=function(){ startGPS(); };
 document.getElementById('btnWellsRefresh').onclick=async function(){ var self=this; self.disabled=true; document.getElementById('wellsInfo').textContent='Güncelleniyor…';
