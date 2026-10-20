@@ -530,13 +530,33 @@ function startGPS(){
   _firstFix=true;
   _watchId=navigator.geolocation.watchPosition(function(p){
     var lat=p.coords.latitude, lon=p.coords.longitude, acc=p.coords.accuracy||0;
-    if(!userMarker){ userMarker=L.circleMarker([lat,lon],{radius:7,color:'#e05c6b',fillColor:'#e05c6b',weight:2,fillOpacity:.9}).addTo(MAP).bindPopup('Bulunduğun nokta'); }
-    else userMarker.setLatLng([lat,lon]);
+    if(!userMarker){ userMarker=L.circleMarker([lat,lon],{radius:7,color:'#e05c6b',fillColor:'#e05c6b',weight:2,fillOpacity:.9}).addTo(MAP).bindPopup(userPopupHTML(lat,lon,acc)); }
+    else { userMarker.setLatLng([lat,lon]); userMarker.setPopupContent(userPopupHTML(lat,lon,acc)); }
     if(!userCircle){ userCircle=L.circle([lat,lon],{radius:acc,color:'#e05c6b',weight:1,fillOpacity:.08}).addTo(MAP); }
     else { userCircle.setLatLng([lat,lon]); userCircle.setRadius(acc); }
     if(_firstFix){ _firstFix=false; MAP.setView([lat,lon],15); }
     showNearest(lat,lon,acc);
   }, function(err){ show('globalMsg','Konum alınamadı: '+err.message,false); }, {enableHighAccuracy:true,maximumAge:3000,timeout:20000});
+}
+function userPopupHTML(lat,lon,acc){
+  var c=lat.toFixed(6)+', '+lon.toFixed(6);
+  return '<div style="min-width:160px;"><b>Bulunduğun nokta</b><br>'+
+    '<span style="font-family:monospace;">'+c+'</span><br>'+
+    '<span style="opacity:.7;">±'+Math.round(acc||0)+' m</span><br>'+
+    '<button class="btn" style="margin-top:6px;padding:5px 10px;font-size:12px;" '+
+    'onclick="copyLoc('+lat+','+lon+')">📋 Koordinatları Kopyala</button></div>';
+}
+function copyLoc(lat,lon){
+  var txt=lat.toFixed(6)+', '+lon.toFixed(6);
+  function ok(){ show('globalMsg','Koordinatlar kopyalandı: '+txt,true); }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(ok).catch(function(){ fallbackCopy(txt,ok); });
+  } else { fallbackCopy(txt,ok); }
+}
+function fallbackCopy(txt,ok){
+  try{ var ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok();
+  }catch(e){ show('globalMsg','Kopyalanamadı — elle seçin: '+txt,false); }
 }
 var _lastFix=null, _nearest=[];
 function showNearest(lat,lon,acc){
