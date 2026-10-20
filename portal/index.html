@@ -269,7 +269,7 @@ function fieldHTML(f, val, dis){
   var d = dis?' disabled':'';
   var lab='<label class="fl">'+esc(f.label)+(f.required?' <span class="req">*</span>':'')+'</label>';
   if(f.type==='textarea') return lab+'<textarea data-fid="'+f.id+'"'+d+'>'+esc(val||'')+'</textarea>';
-  if(f.type==='date') return lab+'<input type="date" data-fid="'+f.id+'" value="'+esc(val||'')+'"'+d+'/>';
+  if(f.type==='date') return lab+'<input type="date" data-fid="'+f.id+'" value="'+esc(val||'')+'"'+d+' onclick="try{this.showPicker()}catch(e){}" onfocus="try{this.showPicker()}catch(e){}" style="cursor:pointer"/>';
   if(f.type==='dropdown'){
     var opts='<option value="">— seçin —</option>'+f.options.map(function(o){return '<option'+(o===val?' selected':'')+'>'+esc(o)+'</option>';}).join('');
     return lab+'<select data-fid="'+f.id+'"'+d+'>'+opts+'</select>';
