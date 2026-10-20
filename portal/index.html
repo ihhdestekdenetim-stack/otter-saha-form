@@ -468,9 +468,9 @@ async function loadWells(forceOnline){
   if(!navigator.onLine){ var c2=await idbGet('wells'); if(c2&&c2.wells){ WELLS=c2.wells; return {from:'cache'}; } return {from:'none'}; }
   var all=[], page=0, size=1000;
   while(page<=50){
-    var r=await sb.from('wells').select('well_id,lat,lon,name,country').range(page*size,page*size+size-1);
+    var r=await sb.from('wells').select('well_id,lat,lon,name,country,year,partner').range(page*size,page*size+size-1);
     if(r.error) break;
-    var rows=r.data||[]; all=all.concat(rows.map(function(w){return [w.lat,w.lon,w.well_id,w.name,w.country||''];}));
+    var rows=r.data||[]; all=all.concat(rows.map(function(w){return [w.lat,w.lon,w.well_id,w.name,w.country||'',w.year||'',w.partner||''];}));
     if(rows.length<size) break; page++;
   }
   if(all.length){ WELLS=all; await idbSet('wells',{wells:all,ts:Date.now()}); return {from:'online',count:all.length}; }
@@ -496,16 +496,33 @@ function renderWells(){
       '<br><button onclick="openRespWell(\''+encodeURIComponent(w[2])+'\')" style="margin-top:6px;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 Yeni Yanıt</button>');
     WCLUSTER.addLayer(m); });
 }
-// Haritadan kuyuya tıklayıp Yeni Yanıt: kuyu bilgisi (ID/ad/ülke) ön-dolar
+// Türkçe-duyarlı normalize (İ/ı → i, aksan katla) — dropdown eşlemesi için
+function nkey(s){ return (s==null?'':String(s)).replace(/ı/g,'i').replace(/İ/g,'i').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
+function matchOpt(fieldId, value){
+  if(!value) return '';
+  var f=OTTER_FORM.fields.filter(function(x){return x.id===fieldId;})[0]; if(!f) return '';
+  var k=nkey(value); var m=(f.options||[]).filter(function(o){return nkey(o)===k;})[0];
+  return m||'';
+}
+// Haritadan kuyuya tıklayıp Yeni Yanıt: kuyu bilgisi (ID/ad/ülke/yıl/partner) + konum teyidi ön-dolar
 function openRespWell(encId){
   var wid=decodeURIComponent(encId);
   var w=WELLS.filter(function(x){return String(x[2])===wid;})[0]; if(!w) return;
-  var prefill={}; prefill['fnv07eqsz']=String(w[2]||''); prefill['fp14wy7iq']=String(w[3]||'');
-  var ctry=(w[4]||'').toString();
-  if(ctry){ var opt=(OTTER_FORM.fields.filter(function(f){return f.id==='frwvo4bwu';})[0]||{}).options||[];
-    var match=opt.filter(function(o){return o.toUpperCase()===ctry.toUpperCase();})[0]; if(match) prefill['frwvo4bwu']=match; }
+  var prefill={};
+  prefill['fnv07eqsz']=String(w[2]||'');                 // Su Kuyusu ID
+  prefill['fp14wy7iq']=String(w[3]||'');                 // Su Kuyusu Adı
+  var ctry=matchOpt('frwvo4bwu', w[4]); if(ctry) prefill['frwvo4bwu']=ctry;   // Ülke
+  var yr=matchOpt('fmtnrw629', w[5]);   if(yr)   prefill['fmtnrw629']=yr;     // Açılış Yılı (=Tabela Yılı)
+  var pr=matchOpt('fuc89zfos', w[6]);   if(pr)   prefill['fuc89zfos']=pr;     // Partner
+  // Koordinat teyidi: cihaz konumu kuyuya ≤25 m ise DOĞRU, >25 m ise YANLIŞ
+  var coordMsg='';
+  if(_lastFix){
+    var d=haversine(_lastFix.lat,_lastFix.lon,w[0],w[1]);
+    prefill['fmakyvnfa']=(d<=25)?'DOĞRU':'YANLIŞ';
+    coordMsg=' · Koordinat: '+Math.round(d)+' m → '+prefill['fmakyvnfa'];
+  } else { coordMsg=' · (Konum için önce "Konumumu Bul" — koordinat teyidi boş)'; }
   showTab('resp'); openResponse(null, prefill);
-  show('globalMsg','"'+wid+'" kuyusu için yeni yanıt — bilgiler ön-dolduruldu.',true);
+  show('globalMsg','"'+wid+'" için yeni yanıt — bilgiler ön-dolduruldu.'+coordMsg,true);
 }
 function startGPS(){
   if(!navigator.geolocation){ show('globalMsg','Cihaz konum (GPS) desteklemiyor.',false); return; }
