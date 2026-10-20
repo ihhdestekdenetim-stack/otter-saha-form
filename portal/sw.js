@@ -3,7 +3,7 @@
  * Supabase REST/Auth istekleri ASLA önbeklenmez (dinamik + kimlik) → doğrudan ağa gider;
  * çevrimdışı yazmalar uygulamadaki localStorage kuyruğuyla yönetilir.
  */
-var VERSION = "otter-portal-v9";
+var VERSION = "otter-portal-v10";
 var TILES = "otter-tiles";
 var SB_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
 var FILES = [
