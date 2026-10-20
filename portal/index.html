@@ -247,14 +247,15 @@ function renderResponses(){
 }
 function firstVal(data,keys){ if(!data) return ''; for(var i=0;i<keys.length;i++){ if(data[keys[i]]!=null&&data[keys[i]]!=='') return data[keys[i]]; } return ''; }
 
-function openResponse(id){
+function openResponse(id, prefill){
   editingResp = (id==null)?null:RESP.filter(function(x){return x.id===id;})[0];
   var locked = editingResp && editingResp.locked;
   document.getElementById('respFormTitle').textContent = id==null?'Yeni Yanıt':'Yanıt #'+id;
   document.getElementById('respLockNote').classList.toggle('hide',!locked);
   document.getElementById('respFormActions').classList.toggle('hide',!!locked);
   hideMsg('respFormMsg');
-  renderFields((editingResp&&editingResp.data)||{}, locked);
+  var data = editingResp ? editingResp.data : (prefill||{});   // yeni yanıtta kuyu bilgisi ön-dolar
+  renderFields(data||{}, locked);
   document.getElementById('secResp').classList.add('hide');
   document.getElementById('respForm').classList.remove('hide');
 }
@@ -467,9 +468,9 @@ async function loadWells(forceOnline){
   if(!navigator.onLine){ var c2=await idbGet('wells'); if(c2&&c2.wells){ WELLS=c2.wells; return {from:'cache'}; } return {from:'none'}; }
   var all=[], page=0, size=1000;
   while(page<=50){
-    var r=await sb.from('wells').select('well_id,lat,lon,name').range(page*size,page*size+size-1);
+    var r=await sb.from('wells').select('well_id,lat,lon,name,country').range(page*size,page*size+size-1);
     if(r.error) break;
-    var rows=r.data||[]; all=all.concat(rows.map(function(w){return [w.lat,w.lon,w.well_id,w.name];}));
+    var rows=r.data||[]; all=all.concat(rows.map(function(w){return [w.lat,w.lon,w.well_id,w.name,w.country||''];}));
     if(rows.length<size) break; page++;
   }
   if(all.length){ WELLS=all; await idbSet('wells',{wells:all,ts:Date.now()}); return {from:'online',count:all.length}; }
@@ -491,7 +492,20 @@ async function initMapTab(){
 function renderWells(){
   if(!WCLUSTER) return; WCLUSTER.clearLayers();
   WELLS.forEach(function(w){ var m=L.circleMarker([w[0],w[1]],{radius:5,color:'#2e74e0',fillColor:'#2e74e0',weight:1.5,fillOpacity:.7});
-    m.bindPopup('<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')); WCLUSTER.addLayer(m); });
+    m.bindPopup('<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')+(w[4]?('<br><span style="opacity:.7">'+esc(w[4])+'</span>'):'')+
+      '<br><button onclick="openRespWell(\''+encodeURIComponent(w[2])+'\')" style="margin-top:6px;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 Yeni Yanıt</button>');
+    WCLUSTER.addLayer(m); });
+}
+// Haritadan kuyuya tıklayıp Yeni Yanıt: kuyu bilgisi (ID/ad/ülke) ön-dolar
+function openRespWell(encId){
+  var wid=decodeURIComponent(encId);
+  var w=WELLS.filter(function(x){return String(x[2])===wid;})[0]; if(!w) return;
+  var prefill={}; prefill['fnv07eqsz']=String(w[2]||''); prefill['fp14wy7iq']=String(w[3]||'');
+  var ctry=(w[4]||'').toString();
+  if(ctry){ var opt=(OTTER_FORM.fields.filter(function(f){return f.id==='frwvo4bwu';})[0]||{}).options||[];
+    var match=opt.filter(function(o){return o.toUpperCase()===ctry.toUpperCase();})[0]; if(match) prefill['frwvo4bwu']=match; }
+  showTab('resp'); openResponse(null, prefill);
+  show('globalMsg','"'+wid+'" kuyusu için yeni yanıt — bilgiler ön-dolduruldu.',true);
 }
 function startGPS(){
   if(!navigator.geolocation){ show('globalMsg','Cihaz konum (GPS) desteklemiyor.',false); return; }
