@@ -530,10 +530,11 @@ function startGPS(){
   _firstFix=true;
   _watchId=navigator.geolocation.watchPosition(function(p){
     var lat=p.coords.latitude, lon=p.coords.longitude, acc=p.coords.accuracy||0;
-    if(!userMarker){ userMarker=L.circleMarker([lat,lon],{radius:7,color:'#e05c6b',fillColor:'#e05c6b',weight:2,fillOpacity:.9}).addTo(MAP).bindPopup(userPopupHTML(lat,lon,acc)); }
-    else { userMarker.setLatLng([lat,lon]); userMarker.setPopupContent(userPopupHTML(lat,lon,acc)); }
-    if(!userCircle){ userCircle=L.circle([lat,lon],{radius:acc,color:'#e05c6b',weight:1,fillOpacity:.08}).addTo(MAP); }
+    if(!userCircle){ userCircle=L.circle([lat,lon],{radius:acc,color:'#e05c6b',weight:1,fillOpacity:.08,interactive:false}).addTo(MAP); }
     else { userCircle.setLatLng([lat,lon]); userCircle.setRadius(acc); }
+    if(!userMarker){ userMarker=L.circleMarker([lat,lon],{radius:8,color:'#e05c6b',fillColor:'#e05c6b',weight:2,fillOpacity:.9}).addTo(MAP).bindPopup(userPopupHTML(lat,lon,acc)); userMarker.on('click',function(){ userMarker.openPopup(); }); }
+    else { userMarker.setLatLng([lat,lon]); userMarker.setPopupContent(userPopupHTML(lat,lon,acc)); }
+    userMarker.bringToFront();
     if(_firstFix){ _firstFix=false; MAP.setView([lat,lon],15); }
     showNearest(lat,lon,acc);
   }, function(err){ show('globalMsg','Konum alınamadı: '+err.message,false); }, {enableHighAccuracy:true,maximumAge:3000,timeout:20000});
