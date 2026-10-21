@@ -40,6 +40,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .pill.locked{background:rgba(46,193,107,.18);color:var(--ok);}
 .pill.assigned{background:rgba(224,160,107,.18);color:var(--warn);}
 .pill.revised{background:rgba(46,193,107,.18);color:var(--ok);}
+.pill.deleted{background:rgba(224,92,107,.18);color:var(--err);}
 label.fl{display:block;font-size:13px;color:var(--text2);margin:12px 0 5px;}
 label.fl .req{color:var(--err);}
 input[type=text],input[type=date],input[type=password],select,textarea{width:100%;background:var(--input);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:10px;font-family:inherit;}
@@ -409,6 +410,7 @@ async function loadResponses(){
   }
 }
 function statusPill(r){
+  if(r.status==='deleted') return '<span class="pill deleted">Silindi</span>';
   if(r.locked) return '<span class="pill locked">Onaylandı (kilitli)</span>';
   if(r.status==='submitted') return '<span class="pill submitted">Onay bekliyor</span>';
   return '<span class="pill draft">Taslak</span>';
@@ -422,16 +424,20 @@ function renderResponses(){
     var when=(r.created_at||'').slice(0,10);
     return '<div class="card"><div class="row"><div><b>Su Kuyusu ID: '+esc(id)+'</b><div class="muted">'+esc(when)+'</div></div>'+
       '<div class="row" style="gap:8px;">'+statusPill(r)+
-      '<button class="btn ghost sm" onclick="openResponse('+r.id+')">'+(r.locked?'Görüntüle':'Düzenle')+'</button></div></div></div>';
+      '<button class="btn ghost sm" onclick="openResponse('+r.id+')">'+((r.locked||r.status==='deleted')?'Görüntüle':'Düzenle')+'</button></div></div></div>';
   }).join('');
 }
 function firstVal(data,keys){ if(!data) return ''; for(var i=0;i<keys.length;i++){ if(data[keys[i]]!=null&&data[keys[i]]!=='') return data[keys[i]]; } return ''; }
 
 function openResponse(id, prefill){
   editingResp = (id==null)?null:RESP.filter(function(x){return x.id===id;})[0];
-  var locked = editingResp && editingResp.locked;
+  var isDeleted = editingResp && editingResp.status==='deleted';
+  var locked = editingResp && (editingResp.locked || isDeleted);
   document.getElementById('respFormTitle').textContent = id==null?'Yeni Yanıt':'Yanıt #'+id;
-  document.getElementById('respLockNote').classList.toggle('hide',!locked);
+  var note=document.getElementById('respLockNote');
+  note.textContent = isDeleted ? 'Bu yanıt OTTER tarafında silindi; artık düzenlenemez.'
+                               : 'Bu yanıt onaylandı; artık düzenlenemez.';
+  note.classList.toggle('hide',!locked);
   document.getElementById('respFormActions').classList.toggle('hide',!!locked);
   hideMsg('respFormMsg');
   var data = editingResp ? editingResp.data : (prefill||{});   // yeni yanıtta kuyu bilgisi ön-dolar
