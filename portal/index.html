@@ -429,6 +429,30 @@ function renderResponses(){
 }
 function firstVal(data,keys){ if(!data) return ''; for(var i=0;i<keys.length;i++){ if(data[keys[i]]!=null&&data[keys[i]]!=='') return data[keys[i]]; } return ''; }
 
+// ── Yeni yanıt otomatik alanları (tarih/yıl/denetleyen) ─────
+function todayStr(){ var d=new Date(), m=('0'+(d.getMonth()+1)).slice(-2), g=('0'+d.getDate()).slice(-2); return d.getFullYear()+'-'+m+'-'+g; }
+function matchDenetleyen(username){
+  var f=OTTER_FORM.fields.filter(function(x){return x.id==='f8tpanh9c';})[0]; if(!f) return '';
+  var uk=nkey(username).replace(/\s+/g,''); if(!uk) return '';
+  var opts=f.options||[];
+  var m=opts.filter(function(o){ return nkey(o).replace(/\s+/g,'')===uk; })[0];          // tam eşleşme
+  if(m) return m;
+  m=opts.filter(function(o){ var k=nkey(o).replace(/\s+/g,''); return k && (k.indexOf(uk)===0 || uk.indexOf(k)===0); })[0];  // önek
+  return m||'';
+}
+function autoFillDefaults(data){
+  data=data||{};
+  if(!data['fa8xyao3d']) data['fa8xyao3d']=todayStr();                    // Denetleme Tarihi = bugün
+  if(!data['f6ru2z29v']){                                                 // Denetleme Yılı = bu yıl (seçeneklerdeyse)
+    var yr=String(new Date().getFullYear());
+    var yf=OTTER_FORM.fields.filter(function(x){return x.id==='f6ru2z29v';})[0];
+    if(yf && (yf.options||[]).indexOf(yr)>=0) data['f6ru2z29v']=yr;
+  }
+  if(!data['f8tpanh9c'] && ME && ME.username){                           // Denetleyen = kullanıcı adı eşleşmesi
+    var d=matchDenetleyen(ME.username); if(d) data['f8tpanh9c']=d;
+  }
+  return data;
+}
 function openResponse(id, prefill){
   editingResp = (id==null)?null:RESP.filter(function(x){return x.id===id;})[0];
   var isDeleted = editingResp && editingResp.status==='deleted';
@@ -440,7 +464,7 @@ function openResponse(id, prefill){
   note.classList.toggle('hide',!locked);
   document.getElementById('respFormActions').classList.toggle('hide',!!locked);
   hideMsg('respFormMsg');
-  var data = editingResp ? editingResp.data : (prefill||{});   // yeni yanıtta kuyu bilgisi ön-dolar
+  var data = editingResp ? editingResp.data : autoFillDefaults(prefill||{});  // yeni yanıtta kuyu bilgisi + oto alanlar
   renderFields(data||{}, locked);
   document.getElementById('secResp').classList.add('hide');
   document.getElementById('respForm').classList.remove('hide');
