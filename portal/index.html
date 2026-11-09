@@ -67,6 +67,17 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
 .hide{display:none;}
 .locknote{font-size:12px;color:var(--ok);margin-top:4px;}
 .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.mapfilt{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.mapfilt select{min-width:0;}
+.mapsearch{display:flex;gap:8px;margin-bottom:10px;}
+.mapsearch input{flex:1;min-width:0;}
+.mapsearch .btn{flex:0 0 auto;}
+/* Mobil: filtre baloncukları tek satırda iki eşit buton */
+@media(max-width:560px){
+  #respFilters{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  #respFilters .chip{width:100%;text-align:center;padding:9px 6px;}
+  .mapfilt{grid-template-columns:1fr 1fr;}
+}
 </style>
 </head>
 <body>
@@ -98,7 +109,7 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     <div class="tabs">
       <button class="tab active" id="tabResp" onclick="showTab('resp')">Yanıtlarım</button>
       <button class="tab" id="tabRev" onclick="showTab('rev')">Bana Atanan Revizyonlar</button>
-      <button class="tab" id="tabMap" onclick="showTab('map')">Koordinat Teyidi</button>
+      <button class="tab" id="tabMap" onclick="showTab('map')">GPS</button>
     </div>
     <div id="globalMsg" class="msg"></div>
 
@@ -129,6 +140,19 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
         <button class="btn" id="btnLocate">📍 Konumumu Bul</button>
         <button class="btn ghost" id="btnWellsRefresh" title="Kuyuları buluttan güncelle (çevrimiçiyken)">⟳ Kuyuları Güncelle</button>
         <span class="muted" id="wellsInfo"></span>
+      </div>
+      <div class="mapsearch">
+        <input type="text" id="mapSearch" placeholder="Kuyu ID veya ad ara…" autocapitalize="none"/>
+        <button class="btn" id="btnMapSearch">🔍 Ara</button>
+      </div>
+      <div class="mapfilt">
+        <select id="fltCountry"><option value="">Ülke — tümü</option></select>
+        <select id="fltPartner"><option value="">Partner — tümü</option></select>
+        <select id="fltYear"><option value="">Tabela yılı — tümü</option></select>
+      </div>
+      <div class="row" style="margin-bottom:10px;">
+        <span class="muted" id="mapFiltInfo"></span>
+        <button class="btn ghost sm" id="btnMapFiltClear">Filtreyi Temizle</button>
       </div>
       <div id="map" style="height:62vh;min-height:360px;border:1px solid var(--border);border-radius:12px;background:#0a0c10;"></div>
       <div id="nearList" style="margin-top:12px;"></div>
@@ -211,7 +235,7 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="supabase.min.js?v=4"></script>
 <script src="leaflet.js?v=4"></script>
 <script src="markercluster.js?v=4"></script>
 <script src="config.js?v=4"></script>
@@ -734,17 +758,69 @@ async function initMapTab(){
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,attribution:'Kaynak: Esri, Maxar'}).addTo(MAP);
     WCLUSTER=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:60}); MAP.addLayer(WCLUSTER);
     var info=document.getElementById('wellsInfo'); info.textContent='Kuyular yükleniyor…';
-    var res=await loadWells(false); renderWells();
+    var res=await loadWells(false); renderWells(); populateMapFilters();
     info.textContent=(res.from==='none')?'Kuyu verisi yok — çevrimiçiyken "Kuyuları Güncelle".':(WELLS.length+' kuyu'+(res.from==='cache'?' (önbellek)':(res.from==='online'?' (güncel)':'')));
   }
   setTimeout(function(){ if(MAP) MAP.invalidateSize(); },150);
 }
+// ── Harita filtresi (piramit: Ülke → Partner → Tabela yılı) + arama ──
+var MAP_FILTER={country:'',partner:'',year:''};
+function wellsMatching(){
+  return WELLS.filter(function(w){
+    if(MAP_FILTER.country && (w[4]||'')!==MAP_FILTER.country) return false;
+    if(MAP_FILTER.partner && (w[6]||'')!==MAP_FILTER.partner) return false;
+    if(MAP_FILTER.year && String(w[5]||'')!==MAP_FILTER.year) return false;
+    return true;
+  });
+}
+function _uniqTr(vals){ var s={}; vals.forEach(function(v){ if(v!=null&&v!=='') s[v]=1; }); return Object.keys(s).sort(function(a,b){return String(a).localeCompare(String(b),'tr');}); }
+function _fillSel(sel, cur, allLabel, vals){
+  if(!sel) return;
+  sel.innerHTML='<option value="">'+allLabel+'</option>'+vals.map(function(v){ return '<option value="'+esc(v)+'"'+(String(v)===String(cur)?' selected':'')+'>'+esc(v)+'</option>'; }).join('');
+  sel.value=cur||'';
+}
+// Her seçim bir sonraki listeyi daraltır (piramit)
+function populateMapFilters(){
+  var cSel=document.getElementById('fltCountry'), pSel=document.getElementById('fltPartner'), ySel=document.getElementById('fltYear');
+  if(!cSel) return;
+  _fillSel(cSel, MAP_FILTER.country, 'Ülke — tümü', _uniqTr(WELLS.map(function(w){return w[4];})));
+  var base=WELLS.filter(function(w){ return !MAP_FILTER.country || (w[4]||'')===MAP_FILTER.country; });
+  _fillSel(pSel, MAP_FILTER.partner, 'Partner — tümü', _uniqTr(base.map(function(w){return w[6];})));
+  var base2=base.filter(function(w){ return !MAP_FILTER.partner || (w[6]||'')===MAP_FILTER.partner; });
+  _fillSel(ySel, MAP_FILTER.year, 'Tabela yılı — tümü', _uniqTr(base2.map(function(w){return String(w[5]||'');})));
+}
+function applyMapFilter(fit){
+  renderWells();
+  if(fit){ var list=wellsMatching(); if(list.length && MAP){ try{ var b=L.latLngBounds(list.map(function(w){return [w[0],w[1]];})); MAP.fitBounds(b.pad(0.2)); }catch(e){} } }
+}
+function onMapFilterChange(which){
+  if(which==='country'){ MAP_FILTER.country=document.getElementById('fltCountry').value; MAP_FILTER.partner=''; MAP_FILTER.year=''; }
+  else if(which==='partner'){ MAP_FILTER.partner=document.getElementById('fltPartner').value; MAP_FILTER.year=''; }
+  else if(which==='year'){ MAP_FILTER.year=document.getElementById('fltYear').value; }
+  populateMapFilters(); applyMapFilter(true);
+}
+function clearMapFilter(){ MAP_FILTER={country:'',partner:'',year:''}; populateMapFilters(); applyMapFilter(false); }
+function searchWells(){
+  var raw=(document.getElementById('mapSearch').value||'').trim(); var q=nkey(raw); if(!q) return;
+  function hits(pool){ return pool.filter(function(w){ return nkey(String(w[2])).indexOf(q)>=0 || nkey(String(w[3]||'')).indexOf(q)>=0; }); }
+  var hit=hits(wellsMatching()); if(!hit.length) hit=hits(WELLS);
+  if(!hit.length){ show('globalMsg','Eşleşen kuyu yok: '+esc(raw),false); return; }
+  var w=hit[0];
+  if(MAP){ MAP.setView([w[0],w[1]],16);
+    L.popup().setLatLng([w[0],w[1]]).setContent('<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')+
+      '<br><button onclick="openRespWell(\''+encodeURIComponent(w[2])+'\')" style="margin-top:6px;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 Yeni Yanıt</button>').openOn(MAP);
+  }
+  show('globalMsg',hit.length+' eşleşme — "'+esc(String(w[2]))+'" gösteriliyor.',true);
+}
 function renderWells(){
   if(!WCLUSTER) return; WCLUSTER.clearLayers();
-  WELLS.forEach(function(w){ var m=L.circleMarker([w[0],w[1]],{radius:5,color:'#2e74e0',fillColor:'#2e74e0',weight:1.5,fillOpacity:.7});
+  var list=wellsMatching();
+  list.forEach(function(w){ var m=L.circleMarker([w[0],w[1]],{radius:5,color:'#2e74e0',fillColor:'#2e74e0',weight:1.5,fillOpacity:.7});
     m.bindPopup('<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')+(w[4]?('<br><span style="opacity:.7">'+esc(w[4])+'</span>'):'')+
       '<br><button onclick="openRespWell(\''+encodeURIComponent(w[2])+'\')" style="margin-top:6px;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 Yeni Yanıt</button>');
     WCLUSTER.addLayer(m); });
+  var info=document.getElementById('mapFiltInfo');
+  if(info){ var tot=WELLS.length, shown=list.length; info.textContent=(shown===tot)?(tot+' kuyu'):(shown+' / '+tot+' kuyu (filtreli)'); }
 }
 // Türkçe-duyarlı normalize (İ/ı → i, aksan katla) — dropdown eşlemesi için
 function nkey(s){ return (s==null?'':String(s)).replace(/ı/g,'i').replace(/İ/g,'i').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
@@ -835,8 +911,14 @@ async function saveCoordCheck(i){
   show('globalMsg','Teyit kaydedildi ('+x.w[2]+').',true);
 }
 document.getElementById('btnLocate').onclick=function(){ startGPS(); };
+document.getElementById('fltCountry').onchange=function(){ onMapFilterChange('country'); };
+document.getElementById('fltPartner').onchange=function(){ onMapFilterChange('partner'); };
+document.getElementById('fltYear').onchange=function(){ onMapFilterChange('year'); };
+document.getElementById('btnMapFiltClear').onclick=clearMapFilter;
+document.getElementById('btnMapSearch').onclick=searchWells;
+document.getElementById('mapSearch').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); searchWells(); } });
 document.getElementById('btnWellsRefresh').onclick=async function(){ var self=this; self.disabled=true; document.getElementById('wellsInfo').textContent='Güncelleniyor…';
-  var res=await loadWells(true); renderWells(); self.disabled=false;
+  var res=await loadWells(true); renderWells(); populateMapFilters(); self.disabled=false;
   document.getElementById('wellsInfo').textContent=(res.from==='online')?(WELLS.length+' kuyu (güncel)'):(WELLS.length+' kuyu');
   show('globalMsg',res.from==='online'?'Kuyular güncellendi.':'Güncellenemedi (çevrimdışı).',res.from==='online');
 };
