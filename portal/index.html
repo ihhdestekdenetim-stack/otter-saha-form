@@ -41,6 +41,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .pill.assigned{background:rgba(224,160,107,.18);color:var(--warn);}
 .pill.revised{background:rgba(46,193,107,.18);color:var(--ok);}
 .pill.deleted{background:rgba(224,92,107,.18);color:var(--err);}
+.pill.revize{background:rgba(224,160,107,.18);color:var(--warn);}
+.chips{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{background:var(--card3);border:1.5px solid var(--border);color:var(--text2);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.chip.active{background:var(--accent);color:#07121a;border-color:var(--accent);}
 label.fl{display:block;font-size:13px;color:var(--text2);margin:12px 0 5px;}
 label.fl .req{color:var(--err);}
 input[type=text],input[type=date],input[type=password],select,textarea{width:100%;background:var(--input);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:10px;font-family:inherit;}
@@ -103,6 +107,12 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
       <div class="row" style="margin-bottom:12px;">
         <div class="muted" id="respCount"></div>
         <button class="btn" onclick="openResponse(null)">+ Yeni Yanıt</button>
+      </div>
+      <div class="chips" id="respFilters" style="margin-bottom:12px;">
+        <button class="chip" data-cat="pending" onclick="toggleFilter(this,'pending')">Onay Bekliyor</button>
+        <button class="chip" data-cat="approved" onclick="toggleFilter(this,'approved')">Onaylandı</button>
+        <button class="chip" data-cat="revision" onclick="toggleFilter(this,'revision')">Revize</button>
+        <button class="chip" data-cat="deleted" onclick="toggleFilter(this,'deleted')">Silindi</button>
       </div>
       <div id="respList"></div>
     </section>
@@ -177,6 +187,7 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
         <div class="row"><b id="respFormTitle">Yeni Yanıt</b>
           <button class="btn ghost sm" onclick="closeResponse()">← Listeye dön</button></div>
         <div id="respLockNote" class="locknote hide">Bu yanıt onaylandı; artık düzenlenemez.</div>
+        <div id="respReviseNote" class="hide" style="background:rgba(224,160,107,.14);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;margin-bottom:10px;color:var(--text);font-size:13px;"></div>
         <div id="fields"></div>
         <div id="respFormMsg" class="msg"></div>
         <div class="actions" id="respFormActions">
@@ -411,15 +422,32 @@ async function loadResponses(){
 }
 function statusPill(r){
   if(r.status==='deleted') return '<span class="pill deleted">Silindi</span>';
+  if(r.status==='revision') return '<span class="pill revize">Revize</span>';
   if(r.locked) return '<span class="pill locked">Onaylandı (kilitli)</span>';
   if(r.status==='submitted') return '<span class="pill submitted">Onay bekliyor</span>';
   return '<span class="pill draft">Taslak</span>';
 }
+var RESP_FILTER = {};                                      // seçili kategoriler (çoklu)
+function respCategory(r){
+  if(r.status==='deleted') return 'deleted';
+  if(r.status==='revision') return 'revision';
+  if(r.locked) return 'approved';
+  if(r.status==='submitted') return 'pending';
+  return 'draft';
+}
+function toggleFilter(btn, cat){
+  if(RESP_FILTER[cat]){ delete RESP_FILTER[cat]; btn.classList.remove('active'); }
+  else { RESP_FILTER[cat]=1; btn.classList.add('active'); }
+  renderResponses();
+}
 function renderResponses(){
-  document.getElementById('respCount').textContent=RESP.length+' yanıt';
+  var active=Object.keys(RESP_FILTER);
+  var list=active.length ? RESP.filter(function(r){ return RESP_FILTER[respCategory(r)]; }) : RESP;
+  document.getElementById('respCount').textContent=active.length ? (list.length+' / '+RESP.length+' yanıt') : (RESP.length+' yanıt');
   var el=document.getElementById('respList');
   if(!RESP.length){ el.innerHTML='<div class="muted">Henüz yanıt yok. "+ Yeni Yanıt" ile ekleyin.</div>'; return; }
-  el.innerHTML=RESP.map(function(r){
+  if(!list.length){ el.innerHTML='<div class="muted">Seçili filtrede yanıt yok.</div>'; return; }
+  el.innerHTML=list.map(function(r){
     var id=firstVal(r.data,['fnv07eqsz'])||'(ID yok)';
     var when=(r.created_at||'').slice(0,10);
     return '<div class="card"><div class="row"><div><b>Su Kuyusu ID: '+esc(id)+'</b><div class="muted">'+esc(when)+'</div></div>'+
@@ -465,14 +493,26 @@ function openResponse(id, prefill){
   document.getElementById('respFormActions').classList.toggle('hide',!!locked);
   hideMsg('respFormMsg');
   var data = editingResp ? editingResp.data : autoFillDefaults(prefill||{});  // yeni yanıtta kuyu bilgisi + oto alanlar
-  renderFields(data||{}, locked);
+  // Revize: yalnız işaretli alanlar düzenlenebilir + not banner'ı
+  var rev = (editingResp && editingResp.status==='revision' && data && data._revise) ? data._revise : null;
+  var rbanner=document.getElementById('respReviseNote');
+  if(rev){
+    var labels=(rev.fields||[]).map(function(fid){ var f=OTTER_FORM.fields.filter(function(x){return x.id===fid;})[0]; return f?f.label:fid; });
+    rbanner.innerHTML='<b>Revize isteniyor.</b> Yalnız şu alanları düzeltip tekrar "Gönder": <b>'+esc(labels.join(', '))+'</b>'+(rev.note?('<br><span style="opacity:.85;">Not: '+esc(rev.note)+'</span>'):'');
+    rbanner.classList.remove('hide');
+  } else { rbanner.classList.add('hide'); }
+  renderFields(data||{}, locked, rev?(rev.fields||[]):null);
   document.getElementById('secResp').classList.add('hide');
   document.getElementById('respForm').classList.remove('hide');
 }
 function closeResponse(){ document.getElementById('respForm').classList.add('hide'); document.getElementById('secResp').classList.remove('hide'); }
 
-function renderFields(data, disabled){
-  var html=OTTER_FORM.fields.map(function(f){ return fieldHTML(f, data[f.id], disabled); }).join('');
+function renderFields(data, disabled, editable){
+  // editable verilirse (revize): yalnız o alan id'leri açık, diğerleri kilitli
+  var html=OTTER_FORM.fields.map(function(f){
+    var dis = disabled || (editable && editable.indexOf(f.id)<0);
+    return fieldHTML(f, data[f.id], dis);
+  }).join('');
   document.getElementById('fields').innerHTML=html;
 }
 function fieldHTML(f, val, dis){
