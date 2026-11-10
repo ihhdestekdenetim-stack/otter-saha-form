@@ -69,6 +69,14 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
 .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
 .mapfilt{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
 .mapfilt select{min-width:0;}
+.msel{position:relative;}
+.msel-btn{width:100%;background:var(--input);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;padding:10px;font-family:inherit;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.msel-btn.on{border-color:var(--accent);color:var(--accent);}
+.msel-panel{position:absolute;z-index:1200;top:calc(100% + 4px);left:0;min-width:100%;max-height:240px;overflow:auto;background:var(--card3);border:1px solid var(--border);border-radius:8px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.45);white-space:nowrap;}
+.msel-panel label{display:flex;align-items:center;gap:8px;padding:6px 8px;font-size:13px;cursor:pointer;border-radius:6px;}
+.msel-panel label:hover{background:var(--card2);}
+.msel-panel input{width:16px;height:16px;flex:0 0 auto;}
+.msel-empty{color:var(--muted);font-size:12px;padding:6px 8px;}
 .mapsearch{display:flex;gap:8px;margin-bottom:10px;}
 .mapsearch input{flex:1;min-width:0;}
 .mapsearch .btn{flex:0 0 auto;}
@@ -146,9 +154,9 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
         <button class="btn" id="btnMapSearch">🔍 Ara</button>
       </div>
       <div class="mapfilt">
-        <select id="fltCountry"><option value="">Ülke — tümü</option></select>
-        <select id="fltPartner"><option value="">Partner — tümü</option></select>
-        <select id="fltYear"><option value="">Tabela yılı — tümü</option></select>
+        <div class="msel" id="mselCountry"><button type="button" class="msel-btn">Ülke — tümü ▾</button><div class="msel-panel hide"></div></div>
+        <div class="msel" id="mselPartner"><button type="button" class="msel-btn">Partner — tümü ▾</button><div class="msel-panel hide"></div></div>
+        <div class="msel" id="mselYear"><button type="button" class="msel-btn">Tabela yılı — tümü ▾</button><div class="msel-panel hide"></div></div>
       </div>
       <div class="row" style="margin-bottom:10px;">
         <span class="muted" id="mapFiltInfo"></span>
@@ -729,7 +737,7 @@ if('serviceWorker' in navigator){
 }
 
 // ── Koordinat Teyidi: çevrimdışı harita + GPS + mevcut kuyular ──
-var MAP=null, WCLUSTER=null, WELLS=[], userMarker=null, userCircle=null, _mapInited=false, _firstFix=true, _watchId=null;
+var MAP=null, WCLUSTER=null, WELLS=[], userMarker=null, userCircle=null, _mapInited=false, _firstFix=true, _watchId=null, WELL_RENDERER=null;
 function idb(){ return new Promise(function(res,rej){ var r=indexedDB.open('otter_portal',1);
   r.onupgradeneeded=function(){ r.result.createObjectStore('kv'); };
   r.onsuccess=function(){ res(r.result); }; r.onerror=function(){ rej(r.error); }; }); }
@@ -754,7 +762,8 @@ async function loadWells(forceOnline){
 async function initMapTab(){
   if(!_mapInited){
     _mapInited=true;
-    MAP=L.map('map',{minZoom:2,maxZoom:19}).setView([20,10],3);
+    MAP=L.map('map',{minZoom:2,maxZoom:19,preferCanvas:true}).setView([20,10],3);
+    WELL_RENDERER=L.canvas({tolerance:14});   // tıklama algılama alanını genişlet (nokta büyümeden)
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,attribution:'Kaynak: Esri, Maxar'}).addTo(MAP);
     WCLUSTER=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:60}); MAP.addLayer(WCLUSTER);
     var info=document.getElementById('wellsInfo'); info.textContent='Kuyular yükleniyor…';
@@ -764,42 +773,61 @@ async function initMapTab(){
   setTimeout(function(){ if(MAP) MAP.invalidateSize(); },150);
 }
 // ── Harita filtresi (piramit: Ülke → Partner → Tabela yılı) + arama ──
-var MAP_FILTER={country:'',partner:'',year:''};
+var MAP_FILTER={country:[],partner:[],year:[]};        // çoklu seçim (checkbox)
 function wellsMatching(){
   return WELLS.filter(function(w){
-    if(MAP_FILTER.country && (w[4]||'')!==MAP_FILTER.country) return false;
-    if(MAP_FILTER.partner && (w[6]||'')!==MAP_FILTER.partner) return false;
-    if(MAP_FILTER.year && String(w[5]||'')!==MAP_FILTER.year) return false;
+    if(MAP_FILTER.country.length && MAP_FILTER.country.indexOf(w[4]||'')<0) return false;
+    if(MAP_FILTER.partner.length && MAP_FILTER.partner.indexOf(w[6]||'')<0) return false;
+    if(MAP_FILTER.year.length && MAP_FILTER.year.indexOf(String(w[5]||''))<0) return false;
     return true;
   });
 }
 function _uniqTr(vals){ var s={}; vals.forEach(function(v){ if(v!=null&&v!=='') s[v]=1; }); return Object.keys(s).sort(function(a,b){return String(a).localeCompare(String(b),'tr');}); }
-function _fillSel(sel, cur, allLabel, vals){
-  if(!sel) return;
-  sel.innerHTML='<option value="">'+allLabel+'</option>'+vals.map(function(v){ return '<option value="'+esc(v)+'"'+(String(v)===String(cur)?' selected':'')+'>'+esc(v)+'</option>'; }).join('');
-  sel.value=cur||'';
+var _MSEL={country:{id:'mselCountry',label:'Ülke'},partner:{id:'mselPartner',label:'Partner'},year:{id:'mselYear',label:'Tabela yılı'}};
+// Piramit: üst seçim bir sonraki seçenekleri daraltır (çoklu seçimde birleşim)
+function _optsFor(dim){
+  if(dim==='country') return _uniqTr(WELLS.map(function(w){return w[4];}));
+  var base=WELLS.filter(function(w){ return !MAP_FILTER.country.length || MAP_FILTER.country.indexOf(w[4]||'')>=0; });
+  if(dim==='partner') return _uniqTr(base.map(function(w){return w[6];}));
+  var base2=base.filter(function(w){ return !MAP_FILTER.partner.length || MAP_FILTER.partner.indexOf(w[6]||'')>=0; });
+  return _uniqTr(base2.map(function(w){return String(w[5]||'');}));
 }
-// Her seçim bir sonraki listeyi daraltır (piramit)
-function populateMapFilters(){
-  var cSel=document.getElementById('fltCountry'), pSel=document.getElementById('fltPartner'), ySel=document.getElementById('fltYear');
-  if(!cSel) return;
-  _fillSel(cSel, MAP_FILTER.country, 'Ülke — tümü', _uniqTr(WELLS.map(function(w){return w[4];})));
-  var base=WELLS.filter(function(w){ return !MAP_FILTER.country || (w[4]||'')===MAP_FILTER.country; });
-  _fillSel(pSel, MAP_FILTER.partner, 'Partner — tümü', _uniqTr(base.map(function(w){return w[6];})));
-  var base2=base.filter(function(w){ return !MAP_FILTER.partner || (w[6]||'')===MAP_FILTER.partner; });
-  _fillSel(ySel, MAP_FILTER.year, 'Tabela yılı — tümü', _uniqTr(base2.map(function(w){return String(w[5]||'');})));
+function renderMsel(dim){
+  var cfg=_MSEL[dim], box=document.getElementById(cfg.id); if(!box) return;
+  var btn=box.querySelector('.msel-btn'), panel=box.querySelector('.msel-panel');
+  var opts=_optsFor(dim);
+  MAP_FILTER[dim]=MAP_FILTER[dim].filter(function(v){return opts.indexOf(v)>=0;});   // geçersiz seçimleri at
+  var n=MAP_FILTER[dim].length;
+  btn.textContent=(n?(cfg.label+' ('+n+')'):(cfg.label+' — tümü'))+' ▾';
+  btn.classList.toggle('on', n>0);
+  panel.innerHTML = opts.length ? opts.map(function(o){
+    var ck=MAP_FILTER[dim].indexOf(o)>=0?' checked':'';
+    return '<label><input type="checkbox" value="'+esc(o)+'"'+ck+'/> '+esc(o)+'</label>';
+  }).join('') : '<div class="msel-empty">Seçenek yok</div>';
+  [].slice.call(panel.querySelectorAll('input[type=checkbox]')).forEach(function(cb){
+    cb.onchange=function(){ var arr=MAP_FILTER[dim], v=cb.value, i=arr.indexOf(v);
+      if(cb.checked){ if(i<0) arr.push(v); } else if(i>=0){ arr.splice(i,1); }
+      onMapMselChange(dim);
+    };
+  });
 }
+function populateMapFilters(){ if(!document.getElementById('mselCountry')) return; renderMsel('country'); renderMsel('partner'); renderMsel('year'); }
 function applyMapFilter(fit){
   renderWells();
   if(fit){ var list=wellsMatching(); if(list.length && MAP){ try{ var b=L.latLngBounds(list.map(function(w){return [w[0],w[1]];})); MAP.fitBounds(b.pad(0.2)); }catch(e){} } }
 }
-function onMapFilterChange(which){
-  if(which==='country'){ MAP_FILTER.country=document.getElementById('fltCountry').value; MAP_FILTER.partner=''; MAP_FILTER.year=''; }
-  else if(which==='partner'){ MAP_FILTER.partner=document.getElementById('fltPartner').value; MAP_FILTER.year=''; }
-  else if(which==='year'){ MAP_FILTER.year=document.getElementById('fltYear').value; }
-  populateMapFilters(); applyMapFilter(true);
+function onMapMselChange(dim){
+  if(dim==='country'){ renderMsel('country'); renderMsel('partner'); renderMsel('year'); }
+  else if(dim==='partner'){ renderMsel('partner'); renderMsel('year'); }
+  else { renderMsel('year'); }
+  applyMapFilter(true);
 }
-function clearMapFilter(){ MAP_FILTER={country:'',partner:'',year:''}; populateMapFilters(); applyMapFilter(false); }
+function toggleMsel(box){
+  var panel=box.querySelector('.msel-panel'), wasHidden=panel.classList.contains('hide');
+  [].slice.call(document.querySelectorAll('.msel-panel')).forEach(function(p){p.classList.add('hide');});
+  if(wasHidden) panel.classList.remove('hide');
+}
+function clearMapFilter(){ MAP_FILTER={country:[],partner:[],year:[]}; populateMapFilters(); applyMapFilter(false); }
 function searchWells(){
   var raw=(document.getElementById('mapSearch').value||'').trim(); var q=nkey(raw); if(!q) return;
   function hits(pool){ return pool.filter(function(w){ return nkey(String(w[2])).indexOf(q)>=0 || nkey(String(w[3]||'')).indexOf(q)>=0; }); }
@@ -815,7 +843,7 @@ function searchWells(){
 function renderWells(){
   if(!WCLUSTER) return; WCLUSTER.clearLayers();
   var list=wellsMatching();
-  list.forEach(function(w){ var m=L.circleMarker([w[0],w[1]],{radius:5,color:'#2e74e0',fillColor:'#2e74e0',weight:1.5,fillOpacity:.7});
+  list.forEach(function(w){ var m=L.circleMarker([w[0],w[1]],{radius:6,color:'#2e74e0',fillColor:'#2e74e0',weight:1.5,fillOpacity:.7,renderer:WELL_RENDERER,bubblingMouseEvents:false});
     m.bindPopup('<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')+(w[4]?('<br><span style="opacity:.7">'+esc(w[4])+'</span>'):'')+
       '<br><button onclick="openRespWell(\''+encodeURIComponent(w[2])+'\')" style="margin-top:6px;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 Yeni Yanıt</button>');
     WCLUSTER.addLayer(m); });
@@ -846,6 +874,12 @@ function openRespWell(encId){
     var d=haversine(_lastFix.lat,_lastFix.lon,w[0],w[1]);
     prefill['fmakyvnfa']=(d<=25)?'DOĞRU':'YANLIŞ';
     coordMsg=' · Koordinat: '+Math.round(d)+' m → '+prefill['fmakyvnfa'];
+    if(d>25){                                           // hata payı aşıldı → YANLIŞ
+      var cc=_lastFix.lat.toFixed(6)+', '+_lastFix.lon.toFixed(6);
+      prefill['f23v12u97']='Anlık konum: '+cc+' (±'+Math.round(_lastFix.acc||0)+' m) · kuyu koordinatından '+Math.round(d)+' m uzakta.';
+      copyCoords(_lastFix.lat,_lastFix.lon,true);        // anlık konumu panoya kopyala (sessiz)
+      coordMsg+=' · konum kopyalandı & Açıklama\'ya yapıştırıldı';
+    }
   } else { coordMsg=' · (Konum için önce "Konumumu Bul" — koordinat teyidi boş)'; }
   showTab('resp'); openResponse(null, prefill);
   show('globalMsg','"'+wid+'" için yeni yanıt — bilgiler ön-dolduruldu.'+coordMsg,true);
@@ -873,13 +907,14 @@ function userPopupHTML(lat,lon,acc){
     '<button class="btn" style="margin-top:6px;padding:5px 10px;font-size:12px;" '+
     'onclick="copyLoc('+lat+','+lon+')">📋 Koordinatları Kopyala</button></div>';
 }
-function copyLoc(lat,lon){
+function copyCoords(lat,lon,silent){
   var txt=lat.toFixed(6)+', '+lon.toFixed(6);
-  function ok(){ show('globalMsg','Koordinatlar kopyalandı: '+txt,true); }
+  var ok=silent?function(){}:function(){ show('globalMsg','Koordinatlar kopyalandı: '+txt,true); };
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(txt).then(ok).catch(function(){ fallbackCopy(txt,ok); });
   } else { fallbackCopy(txt,ok); }
 }
+function copyLoc(lat,lon){ copyCoords(lat,lon,false); }
 function fallbackCopy(txt,ok){
   try{ var ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
     document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); ok();
@@ -911,9 +946,8 @@ async function saveCoordCheck(i){
   show('globalMsg','Teyit kaydedildi ('+x.w[2]+').',true);
 }
 document.getElementById('btnLocate').onclick=function(){ startGPS(); };
-document.getElementById('fltCountry').onchange=function(){ onMapFilterChange('country'); };
-document.getElementById('fltPartner').onchange=function(){ onMapFilterChange('partner'); };
-document.getElementById('fltYear').onchange=function(){ onMapFilterChange('year'); };
+['mselCountry','mselPartner','mselYear'].forEach(function(id){ var box=document.getElementById(id); if(box) box.querySelector('.msel-btn').onclick=function(){ toggleMsel(box); }; });
+document.addEventListener('click',function(e){ if(!e.target.closest('.msel')){ [].slice.call(document.querySelectorAll('.msel-panel')).forEach(function(p){p.classList.add('hide');}); } });
 document.getElementById('btnMapFiltClear').onclick=clearMapFilter;
 document.getElementById('btnMapSearch').onclick=searchWells;
 document.getElementById('mapSearch').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); searchWells(); } });
