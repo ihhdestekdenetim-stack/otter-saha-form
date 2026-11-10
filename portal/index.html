@@ -762,8 +762,7 @@ async function loadWells(forceOnline){
 async function initMapTab(){
   if(!_mapInited){
     _mapInited=true;
-    MAP=L.map('map',{minZoom:2,maxZoom:19,preferCanvas:true}).setView([20,10],3);
-    WELL_RENDERER=L.canvas({tolerance:14});   // tıklama algılama alanını genişlet (nokta büyümeden)
+    MAP=L.map('map',{minZoom:2,maxZoom:19}).setView([20,10],3);   // SVG renderer (dokunmatikte güvenilir tıklama)
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,attribution:'Kaynak: Esri, Maxar'}).addTo(MAP);
     WCLUSTER=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:60}); MAP.addLayer(WCLUSTER);
     var info=document.getElementById('wellsInfo'); info.textContent='Kuyular yükleniyor…';
@@ -843,7 +842,7 @@ function searchWells(){
 function renderWells(){
   if(!WCLUSTER) return; WCLUSTER.clearLayers();
   var list=wellsMatching();
-  list.forEach(function(w){ var m=L.circleMarker([w[0],w[1]],{radius:6,color:'#2e74e0',fillColor:'#2e74e0',weight:1.5,fillOpacity:.7,renderer:WELL_RENDERER,bubblingMouseEvents:false});
+  list.forEach(function(w){ var m=L.circleMarker([w[0],w[1]],{radius:8,color:'#2e74e0',fillColor:'#2e74e0',weight:2,fillOpacity:.75});
     m.bindPopup('<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')+(w[4]?('<br><span style="opacity:.7">'+esc(w[4])+'</span>'):'')+
       '<br><button onclick="openRespWell(\''+encodeURIComponent(w[2])+'\')" style="margin-top:6px;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 Yeni Yanıt</button>');
     WCLUSTER.addLayer(m); });
