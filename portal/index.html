@@ -255,7 +255,7 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     </section>
 
     <!-- Kuyu görsel modalı -->
-    <div id="imgOverlay" class="hide" style="position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:16px;" onclick="closeWellImage(event)">
+    <div id="imgOverlay" style="position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:16px;" onclick="closeWellImage(event)">
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:92vw;max-height:88vh;overflow:auto;padding:14px;" onclick="event.stopPropagation()">
         <div class="row" style="margin-bottom:8px;"><b id="imgTitle">Su Kuyusu Görseli</b>
           <button class="btn ghost sm" onclick="closeWellImage()">Kapat ✕</button></div>
@@ -1032,7 +1032,7 @@ async function showWellImage(encId){
   document.getElementById('imgTitle').textContent='Su Kuyusu Görseli — '+wid;
   var body=document.getElementById('imgBody');
   body.innerHTML='<div class="muted" style="padding:24px 10px;">Görseller yükleniyor…</div>';
-  document.getElementById('imgOverlay').classList.remove('hide');
+  document.getElementById('imgOverlay').style.display='flex';
   try{
     var res=await sb.storage.from(IMG_BUCKET).list(String(wid), {limit:100, sortBy:{column:'name',order:'asc'}});
     if(res.error) throw res.error;
@@ -1046,7 +1046,7 @@ async function showWellImage(encId){
     body.innerHTML='<div class="muted" style="padding:24px 10px;">'+(navigator.onLine?'Görseller alınamadı (depo kurulmamış olabilir).':'Çevrimdışısınız — görseller internet varken görünür.')+'</div>';
   }
 }
-function closeWellImage(){ document.getElementById('imgOverlay').classList.add('hide'); }
+function closeWellImage(){ document.getElementById('imgOverlay').style.display='none'; }
 function renderWells(){
   if(!WCLUSTER) return; WCLUSTER.clearLayers();
   var list=wellsMatching();
