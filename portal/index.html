@@ -243,6 +243,7 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
         <div id="dlMsg" class="msg"></div>
         <div class="actions" style="margin-top:12px;">
           <button class="btn ok" id="btnDlMap">Haritayı İndir</button>
+          <button class="btn ghost" id="btnDlImages">🖼️ Görselleri İndir</button>
           <button class="btn ghost hide" id="btnDlCancel">İptal</button>
         </div>
       </div>
@@ -379,8 +380,10 @@ document.getElementById('btnChangePass').onclick=async function(){
 };
 document.getElementById('btnLogout2').onclick=doLogout;
 
-// ── Çevrimdışı harita indirme (ülkeye göre, Esri uydu) ──────
-var ESRI_TPL='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+// ── Çevrimdışı harita indirme (ülkeye göre, Google uydu) ──────
+// Google alt-alanı Leaflet ile AYNI formülle seçilir: Math.abs(x+y)%4 → mt0..mt3
+// (yoksa indirilen karo haritanın istediği URL'yle eşleşmez, çevrimdışı boş kalır)
+function googleTileUrl(z,x,y){ var s=Math.abs(x+y)%4; return 'https://mt'+s+'.google.com/vt/lyrs=s&x='+x+'&y='+y+'&z='+z; }
 var DL_ZOOMS=[10,11,12,13,14];
 var DL_CAP=8000;                                   // üst sınır (~175 MB); aşılırsa üst zoom düşürülür
 var _dlBusy=false, _dlCancel=false;
@@ -442,6 +445,7 @@ async function downloadCountryMaps(){
   if(!tiles||!tiles.length){ show('dlMsg','İndirilecek karo yok.',false); return; }
   hideMsg('dlMsg'); _dlBusy=true; _dlCancel=false;
   document.getElementById('btnDlMap').disabled=true;
+  document.getElementById('btnDlImages').disabled=true;
   document.getElementById('btnDlCancel').classList.remove('hide');
   document.getElementById('dlProgressWrap').classList.remove('hide');
   var cache=await caches.open('otter-tiles');
@@ -452,7 +456,7 @@ async function downloadCountryMaps(){
   async function worker(){
     while(idx<tiles.length && !_dlCancel){
       var t=tiles[idx++];
-      var url=ESRI_TPL.replace('{z}',t.z).replace('{y}',t.y).replace('{x}',t.x);
+      var url=googleTileUrl(t.z,t.x,t.y);
       try{ var hit=await cache.match(url);
         if(hit){ ok++; }
         else{ var r=await fetch(url,{mode:'no-cors'}); if(r&&(r.ok||r.type==='opaque')){ await cache.put(url,r); ok++; } else fail++; }
@@ -462,9 +466,19 @@ async function downloadCountryMaps(){
   }
   upd(); var ws=[]; for(var i=0;i<CONC;i++) ws.push(worker()); await Promise.all(ws); upd();
   // Görselleri de önceden indir (çevrimdışı "Görsel" için) — yalnız görseli olan kuyular
-  var imgN=0;
+  var imgN=await precacheCountryImages(c);
+  _dlBusy=false;
+  document.getElementById('btnDlMap').disabled=false;
+  document.getElementById('btnDlImages').disabled=false;
+  document.getElementById('btnDlCancel').classList.add('hide');
+  if(_dlCancel) show('dlMsg','İndirme durduruldu — '+ok+' karo + '+imgN+' görsel kaydedildi (saklandı).',true);
+  else show('dlMsg',c+' indirildi: '+ok+' karo + '+imgN+' görsel kaydedildi'+(fail?(', '+fail+' başarısız'):'')+'. Artık çevrimdışı açılır.',true);
+}
+// Ülkenin kuyu görsellerini çevrimdışına al (SW önbellek + idb manifest). Karo indirmeden de kullanılır.
+async function precacheCountryImages(c){
+  var imgN=0, pt=document.getElementById('dlProgressText'), bar=document.getElementById('dlBar');
   try{
-    document.getElementById('dlProgressText').textContent='Kuyu görselleri indiriliyor…';
+    if(pt) pt.textContent='Kuyu görselleri indiriliyor…';
     var root=await sb.storage.from(IMG_BUCKET).list('', {limit:10000});
     var have={}; (root.data||[]).forEach(function(it){ if(it && it.id===null && it.name) have[it.name]=1; });  // klasörler = well_id
     var cids=countryWells(c).map(function(w){return String(w[2]);}).filter(function(id){return have[id];});
@@ -474,17 +488,36 @@ async function downloadCountryMaps(){
         var ns=(lr.data||[]).map(function(f){return f.name;}).filter(_isImg); man[wid]=ns;
         for(var ii=0; ii<ns.length; ii++){ try{ await fetch(sb.storage.from(IMG_BUCKET).getPublicUrl(wid+'/'+ns[ii]).data.publicUrl); imgN++; }catch(e){} }
       }catch(e){}
+      if(pt) pt.textContent='Kuyu görselleri indiriliyor… '+imgN+' görsel ('+(ci+1)+'/'+cids.length+' kuyu)';
+      if(bar&&cids.length) bar.style.width=Math.round((ci+1)/cids.length*100)+'%';
     }
     await idbSet('imgman', man);
   }catch(e){}
+  return imgN;
+}
+async function downloadCountryImages(){
+  if(_dlBusy) return;
+  var c=document.getElementById('dlCountry').value;
+  if(!c){ show('dlMsg','Önce bir ülke seçin.',false); return; }
+  if(!navigator.onLine){ show('dlMsg','İndirmek için internet gerekir.',false); return; }
+  if(!('caches' in window)){ show('dlMsg','Tarayıcı çevrimdışı önbelleği desteklemiyor.',false); return; }
+  hideMsg('dlMsg'); _dlBusy=true; _dlCancel=false;
+  document.getElementById('btnDlMap').disabled=true;
+  document.getElementById('btnDlImages').disabled=true;
+  document.getElementById('btnDlCancel').classList.remove('hide');
+  document.getElementById('dlProgressWrap').classList.remove('hide');
+  document.getElementById('dlBar').style.width='0';
+  var imgN=await precacheCountryImages(c);
   _dlBusy=false;
   document.getElementById('btnDlMap').disabled=false;
+  document.getElementById('btnDlImages').disabled=false;
   document.getElementById('btnDlCancel').classList.add('hide');
-  if(_dlCancel) show('dlMsg','İndirme durduruldu — '+ok+' karo + '+imgN+' görsel kaydedildi (saklandı).',true);
-  else show('dlMsg',c+' indirildi: '+ok+' karo + '+imgN+' görsel kaydedildi'+(fail?(', '+fail+' başarısız'):'')+'. Artık çevrimdışı açılır.',true);
+  if(_dlCancel) show('dlMsg','Durduruldu — '+imgN+' görsel kaydedildi (saklandı).',true);
+  else show('dlMsg',c+': '+imgN+' kuyu görseli çevrimdışı kaydedildi. Artık internetsiz görünür.',true);
 }
 document.getElementById('dlCountry').onchange=updateDlEstimate;
 document.getElementById('btnDlMap').onclick=downloadCountryMaps;
+document.getElementById('btnDlImages').onclick=downloadCountryImages;
 document.getElementById('btnDlCancel').onclick=function(){ _dlCancel=true; };
 document.getElementById('btnDlLoadWells').onclick=async function(){
   var self=this; self.disabled=true;
@@ -953,10 +986,8 @@ async function initMapTab(){
   if(!_mapInited){
     _mapInited=true;
     MAP=L.map('map',{minZoom:2,maxZoom:18}).setView([20,10],3);   // maxZoom=yerel zoom (aşırı yakınlaştırma yok)
-    var satEsri=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,maxNativeZoom:18,attribution:'Kaynak: Esri, Maxar'});
     var satGoogle=L.tileLayer('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{subdomains:['0','1','2','3'],maxZoom:18,maxNativeZoom:20,attribution:'Kaynak: Google, CNES / Airbus, Maxar Technologies'});
-    satEsri.addTo(MAP);
-    L.control.layers({'Uydu (Esri)':satEsri,'Uydu (Google)':satGoogle},{},{position:'topright'}).addTo(MAP);
+    satGoogle.addTo(MAP);   // uydu = Google (Esri gizli)
     WCLUSTER=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:60}); MAP.addLayer(WCLUSTER);
     var info=document.getElementById('wellsInfo'); info.textContent='Kuyular yükleniyor…';
     var res=await loadWells(false); renderWells(); populateMapFilters();
