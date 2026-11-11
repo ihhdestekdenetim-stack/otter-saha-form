@@ -136,10 +136,51 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
       <div id="respList"></div>
     </section>
 
-    <!-- Revizyonlar -->
+    <!-- Fizibilite (yeni fizibilite formu + bana atanan revizyonlar) -->
     <section id="secRev" class="hide">
-      <div class="muted" id="revCount" style="margin-bottom:12px;"></div>
+      <div class="row" style="margin-bottom:12px;">
+        <div class="muted" id="revCount"></div>
+        <button class="btn" onclick="openFeas()">+ Yeni Fizibilite</button>
+      </div>
       <div id="revList"></div>
+    </section>
+
+    <!-- Yeni Fizibilite formu (canlı GPS) -->
+    <section id="feasForm" class="hide">
+      <div class="card">
+        <div class="row"><b>Yeni Fizibilite</b>
+          <button class="btn ghost sm" onclick="closeFeas()">← Listeye dön</button></div>
+        <div id="feasLocNote" class="hide" style="background:rgba(224,92,107,.14);border:1px solid var(--err);border-radius:8px;padding:9px 12px;margin:10px 0;color:var(--text);font-size:13px;"></div>
+        <div id="feasGpsBar" class="muted" style="margin:10px 0;font-size:13px;">📍 GPS başlatılıyor…</div>
+        <div id="feasWarn" class="hide" style="border:2px solid var(--err);background:rgba(224,92,107,.14);border-radius:8px;padding:10px 12px;margin:10px 0;color:var(--err);font-weight:600;font-size:13px;"></div>
+
+        <label class="fl">Koordinat <span class="muted">(canlı)</span></label>
+        <input type="text" id="fzCoord" readonly style="background:var(--card3);"/>
+        <label class="fl">Ülke <span class="muted">(koordinattan otomatik)</span></label>
+        <input type="text" id="fzCountry"/>
+        <label class="fl">İl / Vilayet <span class="muted">(çevrimiçiyken otomatik)</span></label>
+        <input type="text" id="fzCity"/>
+        <label class="fl">İlçe / Bölge</label>
+        <input type="text" id="fzTown"/>
+        <label class="fl">Köy</label>
+        <input type="text" id="fzVillage"/>
+        <label class="fl">En Yakın Su Kuyusuna Uzaklık <span class="muted">(canlı ölçülür)</span></label>
+        <input type="text" id="fzDistWell" readonly style="background:var(--card3);"/>
+        <label class="fl">Bölge / Köy Nüfusu</label>
+        <input type="text" id="fzPopulation" inputmode="numeric"/>
+        <label class="fl">Hane Sayısı</label>
+        <input type="text" id="fzHouseholds" inputmode="numeric"/>
+        <label class="fl">Faydalanan Kişi Sayısı</label>
+        <input type="text" id="fzBeneficiaries" inputmode="numeric"/>
+        <label class="fl">Arazi Sahipliği</label>
+        <input type="text" id="fzLandOwner"/>
+        <label class="fl">Notlar</label>
+        <textarea id="fzNotes"></textarea>
+        <div id="feasFormMsg" class="msg"></div>
+        <div class="actions">
+          <button class="btn ok" id="btnFeasSubmit">Gönder (Fizibilite Kontrolü'ne)</button>
+        </div>
+      </div>
     </section>
 
     <!-- Koordinat Teyidi (çevrimdışı harita + GPS + mevcut kuyular) -->
@@ -213,6 +254,15 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
       </div>
     </section>
 
+    <!-- Kuyu görsel modalı -->
+    <div id="imgOverlay" class="hide" style="position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:16px;" onclick="closeWellImage(event)">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:92vw;max-height:88vh;overflow:auto;padding:14px;" onclick="event.stopPropagation()">
+        <div class="row" style="margin-bottom:8px;"><b id="imgTitle">Su Kuyusu Görseli</b>
+          <button class="btn ghost sm" onclick="closeWellImage()">Kapat ✕</button></div>
+        <div id="imgBody" style="text-align:center;"></div>
+      </div>
+    </div>
+
     <!-- Form paneli (yanıt doldur/düzenle) -->
     <section id="respForm" class="hide">
       <div class="card">
@@ -220,6 +270,7 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
           <button class="btn ghost sm" onclick="closeResponse()">← Listeye dön</button></div>
         <div id="respLockNote" class="locknote hide">Bu yanıt onaylandı; artık düzenlenemez.</div>
         <div id="respReviseNote" class="hide" style="background:rgba(224,160,107,.14);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;margin-bottom:10px;color:var(--text);font-size:13px;"></div>
+        <div id="respLocNote" class="hide" style="background:rgba(224,92,107,.14);border:1px solid var(--err);border-radius:8px;padding:9px 12px;margin-bottom:10px;color:var(--text);font-size:13px;"></div>
         <div id="fields"></div>
         <div id="respFormMsg" class="msg"></div>
         <div class="actions" id="respFormActions">
@@ -437,6 +488,7 @@ function showTab(t){
   if(t==='acct') renderAccount();
   document.getElementById('respForm').classList.add('hide');
   document.getElementById('revForm').classList.add('hide');
+  if(t!=='rev'){ closeFeasSilent(); }      // başka sekmeye geçince fizibilite formunu kapat + GPS durdur
 }
 
 // ── Yanıtlarım ──────────────────────────────────────────────
@@ -534,10 +586,25 @@ function openResponse(id, prefill){
     rbanner.classList.remove('hide');
   } else { rbanner.classList.add('hide'); }
   renderFields(data||{}, locked, rev?(rev.fields||[]):null);
+  var locEl=document.getElementById('respLocNote'); if(locEl) locEl.classList.add('hide');
+  if(!locked) ensureLocationOn('respLocNote');     // Denetim formu doldurulurken konum açık mı?
   document.getElementById('secResp').classList.add('hide');
   document.getElementById('respForm').classList.remove('hide');
 }
 function closeResponse(){ document.getElementById('respForm').classList.add('hide'); document.getElementById('secResp').classList.remove('hide'); }
+// Cihaz konumu (GPS) açık mı? Kapalıysa banner uyarısı (Fizibilite + Denetim formları).
+function ensureLocationOn(bannerElId){
+  var el=document.getElementById(bannerElId); if(!el) return;
+  function warn(m){ el.textContent='📍 '+m; el.classList.remove('hide'); }
+  if(!navigator.geolocation){ warn('Cihaz konum (GPS) desteklemiyor — konum doğrulaması yapılamayacak.'); return; }
+  el.textContent='📍 Konum kontrol ediliyor…'; el.classList.remove('hide');
+  navigator.geolocation.getCurrentPosition(
+    function(){ el.classList.add('hide'); },
+    function(err){ warn(err&&err.code===1 ? 'Konum izni KAPALI — lütfen cihaz/tarayıcı konumunu açın (doğru konum için gerekli).'
+                                           : 'Konum alınamıyor — cihaz konumunu (GPS) açın.'); },
+    {enableHighAccuracy:true, timeout:10000, maximumAge:30000}
+  );
+}
 
 function renderFields(data, disabled, editable){
   // editable verilirse (revize): yalnız o alan id'leri açık, diğerleri kilitli
@@ -680,15 +747,17 @@ function openRevision(id){
 function closeRevision(){ document.getElementById('revForm').classList.add('hide'); document.getElementById('secRev').classList.remove('hide'); }
 document.getElementById('btnRevSave').onclick=async function(){
   var revised={};
-  [].slice.call(document.querySelectorAll('[data-rk]')).forEach(function(i){revised[i.getAttribute('data-rk')]=i.value;});
+  var inputs=[].slice.call(document.querySelectorAll('#revFields [data-rk]'));
+  inputs.forEach(function(i){revised[i.getAttribute('data-rk')]=i.value;});
+  // Gönder'e basınca kullanıcı müdahalesini durdur: tüm alanları + butonu kilitle
+  inputs.forEach(function(i){ i.disabled=true; });
   this.disabled=true;
   var item={kind:'rev_update', id:editingRev.id, body:{revised:revised,status:'revised'}};
   var out=await sendWrite(function(){ return applyItem(item); }, item);
-  this.disabled=false;
-  if(out.error){ show('revFormMsg','Gönderilemedi: '+out.error.message,false); return; }
-  if(out.queued){ show('revFormMsg','Çevrimdışı kaydedildi — internet gelince gönderilecek.',true); updateNet(); setTimeout(closeRevision,900); return; }
-  show('revFormMsg','Revize gönderildi; ana uygulamaya aktarılacak.',true);
-  await loadRevisions(); setTimeout(closeRevision,700);
+  if(out.error){ inputs.forEach(function(i){ i.disabled=false; }); this.disabled=false; show('revFormMsg','Gönderilemedi: '+out.error.message,false); return; }
+  if(out.queued){ show('revFormMsg','Çevrimdışı kaydedildi — internet gelince gönderilecek. Form kilitlendi.',true); updateNet(); setTimeout(closeRevision,1100); return; }
+  show('revFormMsg','Revize gönderildi ve kilitlendi; artık düzenlenemez.',true);
+  await loadRevisions(); setTimeout(closeRevision,900);
 };
 
 // ── Çevrimdışı kuyruk + ağ göstergesi + Service Worker ──────
@@ -702,6 +771,7 @@ function applyItem(it){
   if(it.kind==='resp_update') return sb.from(TBL_RESPONSES).update(it.body).eq('id',it.id);
   if(it.kind==='rev_update')  return sb.from(TBL_REVISIONS).update(it.body).eq('id',it.id);
   if(it.kind==='coord_insert') return sb.from('coord_checks').insert(it.body);
+  if(it.kind==='feas_insert') return sb.from('field_feasibility').insert(it.body);
   return Promise.resolve({error:{message:'bilinmeyen işlem'}});
 }
 // Çevrimdışı ya da ağ hatası → kuyruğa; sunucu (RLS/doğrulama) hatası → mesaj
@@ -745,14 +815,118 @@ function idbGet(k){ return idb().then(function(db){ return new Promise(function(
 function idbSet(k,v){ return idb().then(function(db){ return new Promise(function(res){ var t=db.transaction('kv','readwrite').objectStore('kv').put(v,k); t.onsuccess=function(){res(true);}; t.onerror=function(){res(false);}; }); }).catch(function(){return false;}); }
 function haversine(a,b,c,d){ var R=6371000,p=Math.PI/180,dLat=(c-a)*p,dLon=(d-b)*p; var x=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(a*p)*Math.cos(c*p)*Math.sin(dLon/2)*Math.sin(dLon/2); return 2*R*Math.asin(Math.min(1,Math.sqrt(x))); }
 
+// ══ FİZİBİLİTE FORMU — canlı GPS + koordinattan ülke (offline) + il (çevrimiçi) + en yakın kuyu ══
+var FZ_GEO=null, _fzWatch=null, _fzLast=null, _fzCityDone=false; var FZ_WARN_M=400;
+function loadCountriesGeo(){
+  if(FZ_GEO) return Promise.resolve(FZ_GEO);
+  return fetch('countries.geojson?v=4').then(function(r){return r.json();}).then(function(gj){
+    var out=[];
+    (gj.features||[]).forEach(function(f){
+      var g=f.geometry||{}, tr=(f.properties&&f.properties.tr)||'?';
+      var polys = g.type==='Polygon'?[g.coordinates] : (g.type==='MultiPolygon'?g.coordinates : null);
+      if(!polys) return;
+      var minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+      polys.forEach(function(poly){ poly[0].forEach(function(pt){ var x=pt[0],y=pt[1]; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y; }); });
+      out.push({tr:tr, polys:polys, bb:[minx,miny,maxx,maxy]});
+    });
+    FZ_GEO=out; return out;
+  }).catch(function(){ FZ_GEO=[]; return []; });
+}
+function _pip(x,y,ring){ var inside=false,n=ring.length,j=n-1; for(var i=0;i<n;i++){ var xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1]; if(((yi>y)!==(yj>y)) && (x<(xj-xi)*(y-yi)/((yj-yi)||1e-12)+xi)) inside=!inside; j=i; } return inside; }
+function countryOfJS(lat,lon){
+  if(!FZ_GEO) return '';
+  for(var k=0;k<FZ_GEO.length;k++){ var c=FZ_GEO[k], b=c.bb;
+    if(lon<b[0]||lon>b[2]||lat<b[1]||lat>b[3]) continue;
+    for(var pp=0;pp<c.polys.length;pp++){ var poly=c.polys[pp];
+      if(_pip(lon,lat,poly[0])){ var hole=false; for(var h=1;h<poly.length;h++){ if(_pip(lon,lat,poly[h])){hole=true;break;} } if(!hole) return c.tr; }
+    }
+  }
+  return '';
+}
+function fzNearestWell(lat,lon){
+  var best=null, bd=Infinity;
+  for(var i=0;i<WELLS.length;i++){ var w=WELLS[i]; if(w[0]==null||w[1]==null) continue; var d=haversine(lat,lon,w[0],w[1]); if(d<bd){ bd=d; best=w; } }
+  return best?{w:best,d:bd}:null;
+}
+async function openFeas(){
+  document.getElementById('secRev').classList.add('hide');
+  document.getElementById('feasForm').classList.remove('hide');
+  ['fzCoord','fzCountry','fzCity','fzTown','fzVillage','fzDistWell','fzPopulation','fzHouseholds','fzBeneficiaries','fzLandOwner','fzNotes'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+  document.getElementById('feasWarn').classList.add('hide');
+  var card=document.getElementById('feasForm').querySelector('.card'); if(card) card.style.boxShadow='';
+  hideMsg('feasFormMsg'); _fzLast=null; _fzCityDone=false;
+  ensureLocationOn('feasLocNote');
+  loadCountriesGeo();
+  if(!WELLS.length){ try{ await loadWells(false); }catch(e){} }   // en yakın kuyu ölçümü için
+  fzStartGPS();
+}
+function closeFeasSilent(){ if(_fzWatch!=null && navigator.geolocation){ try{navigator.geolocation.clearWatch(_fzWatch);}catch(e){} } _fzWatch=null; var f=document.getElementById('feasForm'); if(f) f.classList.add('hide'); }
+function closeFeas(){ closeFeasSilent(); document.getElementById('secRev').classList.remove('hide'); }
+function fzStartGPS(){
+  if(!navigator.geolocation){ document.getElementById('feasGpsBar').textContent='📍 Cihaz GPS desteklemiyor.'; return; }
+  if(_fzWatch!=null) try{navigator.geolocation.clearWatch(_fzWatch);}catch(e){}
+  _fzWatch=navigator.geolocation.watchPosition(fzOnFix, function(err){
+    document.getElementById('feasGpsBar').textContent='📍 Konum alınamıyor: '+((err&&err.message)||'hata')+' — cihaz konumunu açın.';
+  }, {enableHighAccuracy:true, maximumAge:2000, timeout:20000});
+}
+function fzOnFix(p){
+  var lat=p.coords.latitude, lon=p.coords.longitude, acc=p.coords.accuracy||0;
+  _fzLast={lat:lat,lon:lon,acc:acc};
+  document.getElementById('feasGpsBar').textContent='📍 Canlı konum: '+lat.toFixed(6)+', '+lon.toFixed(6)+' (±'+Math.round(acc)+' m)';
+  document.getElementById('fzCoord').value=lat.toFixed(6)+', '+lon.toFixed(6);
+  var ctry=countryOfJS(lat,lon); if(ctry) document.getElementById('fzCountry').value=ctry;
+  var nr=fzNearestWell(lat,lon);
+  var warnEl=document.getElementById('feasWarn'), card=document.getElementById('feasForm').querySelector('.card');
+  if(nr){ var dm=nr.d<1000?(Math.round(nr.d)+' m'):((nr.d/1000).toFixed(2)+' km');
+    document.getElementById('fzDistWell').value=dm+' (Kuyu '+nr.w[2]+')';
+    if(nr.d<FZ_WARN_M){ warnEl.textContent='⚠ UYARI: En yakın su kuyusu yalnız '+Math.round(nr.d)+' m uzakta (400 m’den yakın). Bu konum uygun olmayabilir.'; warnEl.classList.remove('hide'); if(card) card.style.boxShadow='0 0 0 3px var(--err)'; }
+    else { warnEl.classList.add('hide'); if(card) card.style.boxShadow=''; }
+  } else { document.getElementById('fzDistWell').value='(kuyu verisi yok)'; }
+  if(!_fzCityDone && navigator.onLine){ _fzCityDone=true; fzReverseCity(lat,lon); }
+}
+function fzReverseCity(lat,lon){                               // İl: çevrimiçiyken bir kez (en iyi çaba)
+  try{
+    fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=8&lat='+lat+'&lon='+lon,{headers:{'Accept':'application/json'}})
+      .then(function(r){return r.json();}).then(function(d){
+        var a=(d&&d.address)||{}; var il=a.state||a.province||a.region||a.county||'';
+        if(il && !document.getElementById('fzCity').value) document.getElementById('fzCity').value=il;
+      }).catch(function(){ _fzCityDone=false; });
+  }catch(e){ _fzCityDone=false; }
+}
+document.getElementById('btnFeasSubmit').onclick=async function(){
+  hideMsg('feasFormMsg');
+  if(!_fzLast){ show('feasFormMsg','Konum alınamadı — GPS açık mı? Koordinat zorunlu.',false); return; }
+  var nr=fzNearestWell(_fzLast.lat,_fzLast.lon);
+  if(nr && nr.d<FZ_WARN_M){ if(!confirm('En yakın su kuyusu yalnız '+Math.round(nr.d)+' m uzakta (400 m’den yakın). Yine de onaylıyor musunuz?')) return; }
+  var body={ owner_username: ME.username,
+    raw_coord: document.getElementById('fzCoord').value, lat:_fzLast.lat, lon:_fzLast.lon,
+    country: document.getElementById('fzCountry').value.trim(), city: document.getElementById('fzCity').value.trim(),
+    town: document.getElementById('fzTown').value.trim(), village: document.getElementById('fzVillage').value.trim(),
+    population: document.getElementById('fzPopulation').value.trim(), households: document.getElementById('fzHouseholds').value.trim(),
+    beneficiaries: document.getElementById('fzBeneficiaries').value.trim(), land_owner: document.getElementById('fzLandOwner').value.trim(),
+    notes: document.getElementById('fzNotes').value.trim(), dist_well_text: document.getElementById('fzDistWell').value, status:'submitted' };
+  var btn=this; btn.disabled=true;
+  var item={kind:'feas_insert', body:body};
+  var out=await sendWrite(function(){ return sb.from('field_feasibility').insert(body); }, item);
+  btn.disabled=false;
+  if(out.error){ show('feasFormMsg','Gönderilemedi: '+out.error.message,false); return; }
+  if(out.queued){ show('feasFormMsg','Çevrimdışı kaydedildi — internet gelince gönderilecek.',true); updateNet(); setTimeout(closeFeas,900); return; }
+  show('feasFormMsg','Gönderildi — Fizibilite Kontrolü’ne düşecek.',true);
+  setTimeout(closeFeas,900);
+};
+
 async function loadWells(forceOnline){
   if(!forceOnline){ var cached=await idbGet('wells'); if(cached&&cached.wells&&cached.wells.length){ WELLS=cached.wells; return {from:'cache',ts:cached.ts}; } }
   if(!navigator.onLine){ var c2=await idbGet('wells'); if(c2&&c2.wells){ WELLS=c2.wells; return {from:'cache'}; } return {from:'none'}; }
+  var cols='well_id,lat,lon,name,country,year,partner,responsible,contact';
   var all=[], page=0, size=1000;
   while(page<=50){
-    var r=await sb.from('wells').select('well_id,lat,lon,name,country,year,partner').range(page*size,page*size+size-1);
-    if(r.error) break;
-    var rows=r.data||[]; all=all.concat(rows.map(function(w){return [w.lat,w.lon,w.well_id,w.name,w.country||'',w.year||'',w.partner||''];}));
+    var r=await sb.from('wells').select(cols).range(page*size,page*size+size-1);
+    if(r.error){
+      if(cols.indexOf('responsible')>=0){ cols='well_id,lat,lon,name,country,year,partner'; all=[]; page=0; continue; }  // kolonlar henüz yoksa temel select'e düş
+      break;
+    }
+    var rows=r.data||[]; all=all.concat(rows.map(function(w){return [w.lat,w.lon,w.well_id,w.name,w.country||'',w.year||'',w.partner||'',w.responsible||'',w.contact||''];}));
     if(rows.length<size) break; page++;
   }
   if(all.length){ WELLS=all; await idbSet('wells',{wells:all,ts:Date.now()}); return {from:'online',count:all.length}; }
@@ -834,17 +1008,39 @@ function searchWells(){
   if(!hit.length){ show('globalMsg','Eşleşen kuyu yok: '+esc(raw),false); return; }
   var w=hit[0];
   if(MAP){ MAP.setView([w[0],w[1]],16);
-    L.popup().setLatLng([w[0],w[1]]).setContent('<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')+
-      '<br><button onclick="openRespWell(\''+encodeURIComponent(w[2])+'\')" style="margin-top:6px;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 Yeni Yanıt</button>').openOn(MAP);
+    L.popup().setLatLng([w[0],w[1]]).setContent(wellPopupHTML(w)).openOn(MAP);
   }
   show('globalMsg',hit.length+' eşleşme — "'+esc(String(w[2]))+'" gösteriliyor.',true);
 }
+// Kuyu popup içeriği (sorumlu/iletişim alanları + Yeni Yanıt + Görsel) — WELLS: [lat,lon,id,ad,ülke,yıl,partner,sorumlu?,iletişim?,görsel?]
+function wellPopupHTML(w){
+  var enc=encodeURIComponent(String(w[2]));
+  var resp=w[7]||'', contact=w[8]||'';
+  var h='<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')+(w[4]?('<br><span style="opacity:.7">'+esc(w[4])+'</span>'):'');
+  h+='<br><span style="opacity:.7">Su Kuyusu Sorumlusu:</span> '+(resp?esc(resp):'—');
+  h+='<br><span style="opacity:.7">Sorumlu İletişim:</span> '+(contact?esc(contact):'—');
+  h+='<div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap;">'+
+     '<button onclick="openRespWell(\''+enc+'\')" style="border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 Yeni Yanıt</button>'+
+     '<button onclick="showWellImage(\''+enc+'\')" style="border:1px solid #252b38;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#1e2330;color:#f0ede8;cursor:pointer;">🖼️ Görsel</button>'+
+     '</div>';
+  return h;
+}
+function showWellImage(encId){
+  var wid=decodeURIComponent(encId);
+  var w=WELLS.filter(function(x){return String(x[2])===wid;})[0];
+  var img=w&&w[9]?String(w[9]):'';
+  document.getElementById('imgTitle').textContent='Su Kuyusu Görseli — '+wid;
+  document.getElementById('imgBody').innerHTML = img
+    ? '<img src="'+esc(img)+'" alt="Kuyu görseli" style="max-width:100%;max-height:80vh;border-radius:8px;"/>'
+    : '<div class="muted" style="padding:28px 10px;">Bu kuyunun görseli henüz eklenmedi.</div>';
+  document.getElementById('imgOverlay').classList.remove('hide');
+}
+function closeWellImage(){ document.getElementById('imgOverlay').classList.add('hide'); }
 function renderWells(){
   if(!WCLUSTER) return; WCLUSTER.clearLayers();
   var list=wellsMatching();
   list.forEach(function(w){ var m=L.circleMarker([w[0],w[1]],{radius:8,color:'#2e74e0',fillColor:'#2e74e0',weight:2,fillOpacity:.75});
-    m.bindPopup('<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')+(w[4]?('<br><span style="opacity:.7">'+esc(w[4])+'</span>'):'')+
-      '<br><button onclick="openRespWell(\''+encodeURIComponent(w[2])+'\')" style="margin-top:6px;border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 Yeni Yanıt</button>');
+    m.bindPopup(wellPopupHTML(w));
     WCLUSTER.addLayer(m); });
   var info=document.getElementById('mapFiltInfo');
   if(info){ var tot=WELLS.length, shown=list.length; info.textContent=(shown===tot)?(tot+' kuyu'):(shown+' / '+tot+' kuyu (filtreli)'); }

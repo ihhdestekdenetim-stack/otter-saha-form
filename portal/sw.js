@@ -3,7 +3,7 @@
  * Supabase REST/Auth istekleri ASLA önbeklenmez (dinamik + kimlik) → doğrudan ağa gider;
  * çevrimdışı yazmalar uygulamadaki localStorage kuyruğuyla yönetilir.
  */
-var VERSION = "otter-portal-v20";
+var VERSION = "otter-portal-v22";
 var TILES = "otter-tiles";
 var SB_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
 // supabase-js artık YERELDE barınıyor (supabase.min.js) → hiçbir runtime CDN bağımlılığı yok.
@@ -13,6 +13,7 @@ var FILES = [
   "manifest.webmanifest",
   "icon-192.png", "icon-512.png", "icon-maskable-512.png",
   "supabase.min.js?v=4",
+  "countries.geojson?v=4",
   "leaflet.js?v=4", "leaflet.css?v=4",
   "markercluster.js?v=4",
   "MarkerCluster.css?v=4", "MarkerCluster.Default.css?v=4"
