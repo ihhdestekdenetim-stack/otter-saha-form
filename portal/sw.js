@@ -3,7 +3,7 @@
  * Supabase REST/Auth istekleri ASLA önbeklenmez (dinamik + kimlik) → doğrudan ağa gider;
  * çevrimdışı yazmalar uygulamadaki localStorage kuyruğuyla yönetilir.
  */
-var VERSION = "otter-portal-v25";
+var VERSION = "otter-portal-v26";
 var TILES = "otter-tiles";
 var SB_CDN = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";
 // supabase-js artık YERELDE barınıyor (supabase.min.js) → hiçbir runtime CDN bağımlılığı yok.
@@ -18,7 +18,8 @@ var FILES = [
   "markercluster.js?v=4",
   "MarkerCluster.css?v=4", "MarkerCluster.Default.css?v=4"
 ];
-var TILE_HOSTS = ["server.arcgisonline.com", "tile.openstreetmap.org"];
+var TILE_HOSTS = ["server.arcgisonline.com", "tile.openstreetmap.org",
+  "mt0.google.com", "mt1.google.com", "mt2.google.com", "mt3.google.com"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(
