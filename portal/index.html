@@ -466,34 +466,44 @@ async function downloadCountryMaps(){
   }
   upd(); var ws=[]; for(var i=0;i<CONC;i++) ws.push(worker()); await Promise.all(ws); upd();
   // Görselleri de önceden indir (çevrimdışı "Görsel" için) — yalnız görseli olan kuyular
-  var imgN=await precacheCountryImages(c);
+  var img=await precacheCountryImages(c);
   _dlBusy=false;
   document.getElementById('btnDlMap').disabled=false;
   document.getElementById('btnDlImages').disabled=false;
   document.getElementById('btnDlCancel').classList.add('hide');
-  if(_dlCancel) show('dlMsg','İndirme durduruldu — '+ok+' karo + '+imgN+' görsel kaydedildi (saklandı).',true);
-  else show('dlMsg',c+' indirildi: '+ok+' karo + '+imgN+' görsel kaydedildi'+(fail?(', '+fail+' başarısız'):'')+'. Artık çevrimdışı açılır.',true);
+  if(_dlCancel) show('dlMsg','İndirme durduruldu — '+ok+' karo + '+img.count+' görsel ('+_mb(img.bytes)+' MB) kaydedildi (saklandı).',true);
+  else show('dlMsg',c+' indirildi: '+ok+' karo + '+img.count+' görsel ('+_mb(img.bytes)+' MB)'+(fail?(', '+fail+' başarısız'):'')+'. Artık çevrimdışı açılır.',true);
 }
 // Ülkenin kuyu görsellerini çevrimdışına al (SW önbellek + idb manifest). Karo indirmeden de kullanılır.
+function _mb(b){ return (b/1048576).toFixed(1); }
 async function precacheCountryImages(c){
-  var imgN=0, pt=document.getElementById('dlProgressText'), bar=document.getElementById('dlBar');
+  var pt=document.getElementById('dlProgressText'), bar=document.getElementById('dlBar');
+  var okN=0, bytes=0, totalBytes=0, totalN=0;
   try{
-    if(pt) pt.textContent='Kuyu görselleri indiriliyor…';
+    if(pt) pt.textContent='Görsel listesi alınıyor…';
     var root=await sb.storage.from(IMG_BUCKET).list('', {limit:10000});
     var have={}; (root.data||[]).forEach(function(it){ if(it && it.id===null && it.name) have[it.name]=1; });  // klasörler = well_id
     var cids=countryWells(c).map(function(w){return String(w[2]);}).filter(function(id){return have[id];});
-    var man={}; try{ man=(await idbGet('imgman'))||{}; }catch(e){}
+    // Faz A: listele + indirilecek boyutu topla
+    var plan=[], man={}; try{ man=(await idbGet('imgman'))||{}; }catch(e){}
     for(var ci=0; ci<cids.length && !_dlCancel; ci++){ var wid=cids[ci];
       try{ var lr=await sb.storage.from(IMG_BUCKET).list(wid, {limit:100});
-        var ns=(lr.data||[]).map(function(f){return f.name;}).filter(_isImg); man[wid]=ns;
-        for(var ii=0; ii<ns.length; ii++){ try{ await fetch(sb.storage.from(IMG_BUCKET).getPublicUrl(wid+'/'+ns[ii]).data.publicUrl); imgN++; }catch(e){} }
+        var items=(lr.data||[]).filter(function(f){return _isImg(f.name);});
+        man[wid]=items.map(function(f){return f.name;});
+        items.forEach(function(f){ var sz=(f.metadata&&f.metadata.size)||0; totalBytes+=sz; totalN++; plan.push({wid:wid,name:f.name,size:sz}); });
       }catch(e){}
-      if(pt) pt.textContent='Kuyu görselleri indiriliyor… '+imgN+' görsel ('+(ci+1)+'/'+cids.length+' kuyu)';
-      if(bar&&cids.length) bar.style.width=Math.round((ci+1)/cids.length*100)+'%';
+      if(pt) pt.textContent='İndirilecek hesaplanıyor… '+totalN+' görsel · '+_mb(totalBytes)+' MB ('+(ci+1)+'/'+cids.length+' kuyu)';
     }
     await idbSet('imgman', man);
+    var totMB=_mb(totalBytes);
+    // Faz B: indir (SW önbellek)
+    for(var pi=0; pi<plan.length && !_dlCancel; pi++){ var it=plan[pi];
+      try{ await fetch(sb.storage.from(IMG_BUCKET).getPublicUrl(it.wid+'/'+it.name).data.publicUrl); okN++; bytes+=it.size; }catch(e){}
+      if(pt) pt.textContent='Görseller indiriliyor… '+okN+'/'+totalN+' görsel · '+_mb(bytes)+' / '+totMB+' MB';
+      if(bar&&totalN) bar.style.width=Math.round(okN/totalN*100)+'%';
+    }
   }catch(e){}
-  return imgN;
+  return {count:okN, bytes:bytes, total:totalN, totalBytes:totalBytes};
 }
 async function downloadCountryImages(){
   if(_dlBusy) return;
@@ -507,13 +517,13 @@ async function downloadCountryImages(){
   document.getElementById('btnDlCancel').classList.remove('hide');
   document.getElementById('dlProgressWrap').classList.remove('hide');
   document.getElementById('dlBar').style.width='0';
-  var imgN=await precacheCountryImages(c);
+  var r=await precacheCountryImages(c);
   _dlBusy=false;
   document.getElementById('btnDlMap').disabled=false;
   document.getElementById('btnDlImages').disabled=false;
   document.getElementById('btnDlCancel').classList.add('hide');
-  if(_dlCancel) show('dlMsg','Durduruldu — '+imgN+' görsel kaydedildi (saklandı).',true);
-  else show('dlMsg',c+': '+imgN+' kuyu görseli çevrimdışı kaydedildi. Artık internetsiz görünür.',true);
+  if(_dlCancel) show('dlMsg','Durduruldu — '+r.count+' / '+r.total+' görsel ('+_mb(r.bytes)+' MB) kaydedildi (saklandı).',true);
+  else show('dlMsg',c+': '+r.count+' kuyu görseli · '+_mb(r.bytes)+' MB çevrimdışı kaydedildi. Artık internetsiz görünür.',true);
 }
 document.getElementById('dlCountry').onchange=updateDlEstimate;
 document.getElementById('btnDlMap').onclick=downloadCountryMaps;
