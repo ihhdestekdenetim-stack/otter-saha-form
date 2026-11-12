@@ -200,6 +200,7 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
         <div class="msel" id="mselCountry"><button type="button" class="msel-btn">Ülke — tümü ▾</button><div class="msel-panel hide"></div></div>
         <div class="msel" id="mselPartner"><button type="button" class="msel-btn">Partner — tümü ▾</button><div class="msel-panel hide"></div></div>
         <div class="msel" id="mselYear"><button type="button" class="msel-btn">Tabela yılı — tümü ▾</button><div class="msel-panel hide"></div></div>
+        <select id="mapInsp" title="Denetim durumu"><option value="">Denetim: tümü</option><option value="yes">🟠 Denetlenen</option><option value="no">Denetlenmeyen</option></select>
       </div>
       <div class="row" style="margin-bottom:10px;">
         <span class="muted" id="mapFiltInfo"></span>
@@ -1023,11 +1024,15 @@ async function initMapTab(){
 }
 // ── Harita filtresi (piramit: Ülke → Partner → Tabela yılı) + arama ──
 var MAP_FILTER={country:[],partner:[],year:[]};        // çoklu seçim (checkbox)
+function _inspVal(){ var el=document.getElementById('mapInsp'); return el?el.value:''; }
+function _inspOk(w,iv){ return iv==='yes'?!!w[9] : iv==='no'?!w[9] : true; }   // w[9]=son denetim
 function wellsMatching(){
+  var iv=_inspVal();
   return WELLS.filter(function(w){
     if(MAP_FILTER.country.length && MAP_FILTER.country.indexOf(w[4]||'')<0) return false;
     if(MAP_FILTER.partner.length && MAP_FILTER.partner.indexOf(w[6]||'')<0) return false;
     if(MAP_FILTER.year.length && MAP_FILTER.year.indexOf(String(w[5]||''))<0) return false;
+    if(!_inspOk(w,iv)) return false;
     return true;
   });
 }
@@ -1035,8 +1040,9 @@ function _uniqTr(vals){ var s={}; vals.forEach(function(v){ if(v!=null&&v!=='') 
 var _MSEL={country:{id:'mselCountry',label:'Ülke'},partner:{id:'mselPartner',label:'Partner'},year:{id:'mselYear',label:'Tabela yılı'}};
 // Piramit: üst seçim bir sonraki seçenekleri daraltır (çoklu seçimde birleşim)
 function _optsFor(dim){
-  if(dim==='country') return _uniqTr(WELLS.map(function(w){return w[4];}));
-  var base=WELLS.filter(function(w){ return !MAP_FILTER.country.length || MAP_FILTER.country.indexOf(w[4]||'')>=0; });
+  var iv=_inspVal();
+  if(dim==='country') return _uniqTr(WELLS.filter(function(w){return _inspOk(w,iv);}).map(function(w){return w[4];}));
+  var base=WELLS.filter(function(w){ return _inspOk(w,iv) && (!MAP_FILTER.country.length || MAP_FILTER.country.indexOf(w[4]||'')>=0); });
   if(dim==='partner') return _uniqTr(base.map(function(w){return w[6];}));
   var base2=base.filter(function(w){ return !MAP_FILTER.partner.length || MAP_FILTER.partner.indexOf(w[6]||'')>=0; });
   return _uniqTr(base2.map(function(w){return String(w[5]||'');}));
@@ -1076,7 +1082,7 @@ function toggleMsel(box){
   [].slice.call(document.querySelectorAll('.msel-panel')).forEach(function(p){p.classList.add('hide');});
   if(wasHidden) panel.classList.remove('hide');
 }
-function clearMapFilter(){ MAP_FILTER={country:[],partner:[],year:[]}; populateMapFilters(); applyMapFilter(false); }
+function clearMapFilter(){ MAP_FILTER={country:[],partner:[],year:[]}; var mi=document.getElementById('mapInsp'); if(mi) mi.value=''; populateMapFilters(); applyMapFilter(false); }
 function searchWells(){
   var raw=(document.getElementById('mapSearch').value||'').trim(); var q=nkey(raw); if(!q) return;
   function hits(pool){ return pool.filter(function(w){ return nkey(String(w[2])).indexOf(q)>=0 || nkey(String(w[3]||'')).indexOf(q)>=0; }); }
@@ -1237,6 +1243,7 @@ document.getElementById('btnLocate').onclick=function(){ startGPS(); };
 ['mselCountry','mselPartner','mselYear'].forEach(function(id){ var box=document.getElementById(id); if(box) box.querySelector('.msel-btn').onclick=function(){ toggleMsel(box); }; });
 document.addEventListener('click',function(e){ if(!e.target.closest('.msel')){ [].slice.call(document.querySelectorAll('.msel-panel')).forEach(function(p){p.classList.add('hide');}); } });
 document.getElementById('btnMapFiltClear').onclick=clearMapFilter;
+(function(){ var mi=document.getElementById('mapInsp'); if(mi) mi.onchange=function(){ populateMapFilters(); applyMapFilter(true); }; })();
 document.getElementById('btnMapSearch').onclick=searchWells;
 document.getElementById('mapSearch').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); searchWells(); } });
 document.getElementById('btnWellsRefresh').onclick=async function(){ var self=this; self.disabled=true; document.getElementById('wellsInfo').textContent='Güncelleniyor…';
