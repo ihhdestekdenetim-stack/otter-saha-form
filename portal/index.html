@@ -387,6 +387,8 @@ document.getElementById('btnLogout2').onclick=doLogout;
 // Google alt-alanı Leaflet ile AYNI formülle seçilir: Math.abs(x+y)%4 → mt0..mt3
 // (yoksa indirilen karo haritanın istediği URL'yle eşleşmez, çevrimdışı boş kalır)
 function googleTileUrl(z,x,y){ var s=Math.abs(x+y)%4; return 'https://mt'+s+'.google.com/vt/lyrs=s&x='+x+'&y='+y+'&z='+z; }
+// İlçe/semt etiketleri (lyrs=h, şeffaf) — çevrimdışı için uydu karolarıyla birlikte indirilir
+function googleLabelUrl(z,x,y){ var s=Math.abs(x+y)%4; return 'https://mt'+s+'.google.com/vt/lyrs=h&x='+x+'&y='+y+'&z='+z; }
 var DL_ZOOMS=[10,11,12,13,14];
 var DL_CAP=8000;                                   // üst sınır (~175 MB); aşılırsa üst zoom düşürülür
 var _dlBusy=false, _dlCancel=false;
@@ -464,6 +466,10 @@ async function downloadCountryMaps(){
         if(hit){ ok++; }
         else{ var r=await fetch(url,{mode:'no-cors'}); if(r&&(r.ok||r.type==='opaque')){ await cache.put(url,r); ok++; } else fail++; }
       }catch(e){ fail++; }
+      // İlçe/semt etiket karosu (lyrs=h) — çevrimdışı "Etiketler" katmanı için
+      try{ var lurl=googleLabelUrl(t.z,t.x,t.y); var lh=await cache.match(lurl);
+        if(!lh){ var lr=await fetch(lurl,{mode:'no-cors'}); if(lr&&(lr.ok||lr.type==='opaque')) await cache.put(lurl,lr); }
+      }catch(e){}
       done++; if(done%8===0||done===total) upd();
     }
   }
@@ -475,7 +481,7 @@ async function downloadCountryMaps(){
   document.getElementById('btnDlImages').disabled=false;
   document.getElementById('btnDlCancel').classList.add('hide');
   if(_dlCancel) show('dlMsg','İndirme durduruldu — '+ok+' karo + '+img.count+' görsel ('+_mb(img.bytes)+' MB) kaydedildi (saklandı).',true);
-  else show('dlMsg',c+' indirildi: '+ok+' karo + '+img.count+' görsel ('+_mb(img.bytes)+' MB)'+(fail?(', '+fail+' başarısız'):'')+'. Artık çevrimdışı açılır.',true);
+  else show('dlMsg',c+' indirildi: '+ok+' karo (+ ilçe/semt etiketleri) + '+img.count+' görsel ('+_mb(img.bytes)+' MB)'+(fail?(', '+fail+' başarısız'):'')+'. Artık çevrimdışı açılır.',true);
 }
 // Ülkenin kuyu görsellerini çevrimdışına al (SW önbellek + idb manifest). Karo indirmeden de kullanılır.
 function _mb(b){ return (b/1048576).toFixed(1); }
@@ -1012,8 +1018,16 @@ async function initMapTab(){
   if(!_mapInited){
     _mapInited=true;
     MAP=L.map('map',{minZoom:2,maxZoom:18}).setView([20,10],3);   // maxZoom=yerel zoom (aşırı yakınlaştırma yok)
-    var satGoogle=L.tileLayer('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{subdomains:['0','1','2','3'],maxZoom:18,maxNativeZoom:20,attribution:'Kaynak: Google, CNES / Airbus, Maxar Technologies'});
-    satGoogle.addTo(MAP);   // uydu = Google (Esri gizli)
+    var GSUB=['0','1','2','3'];
+    var satGoogle=L.tileLayer('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{subdomains:GSUB,maxZoom:18,maxNativeZoom:20,attribution:'Kaynak: Google, CNES / Airbus, Maxar Technologies'});
+    var roadGoogle=L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{subdomains:GSUB,maxZoom:18,maxNativeZoom:20,attribution:'Kaynak: Google'});
+    var labelsGoogle=L.tileLayer('https://mt{s}.google.com/vt/lyrs=h&x={x}&y={y}&z={z}',{subdomains:GSUB,maxZoom:18,maxNativeZoom:20,attribution:'Kaynak: Google'});
+    satGoogle.addTo(MAP);   // varsayılan = Google uydu
+    // Seçmeli harita modelleri: Uydu / Yol Haritası + İlçe/Semt etiketleri (çevrimdışı önbellekli)
+    L.control.layers(
+      {'🛰 Uydu (Google)':satGoogle, '🗺 Yol Haritası (Google)':roadGoogle},
+      {'🏷 İlçe / Semt Etiketleri':labelsGoogle},
+      {position:'topright', collapsed:true}).addTo(MAP);
     WCLUSTER=L.layerGroup(); MAP.addLayer(WCLUSTER);   // KÜMELEME YOK — her konum ayrı
     loadCountryBorders();   // ülke sınırları + adları
     var info=document.getElementById('wellsInfo'); info.textContent='Kuyular yükleniyor…';
