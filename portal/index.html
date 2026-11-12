@@ -86,6 +86,8 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
   #respFilters .chip{width:100%;text-align:center;padding:9px 6px;}
   .mapfilt{grid-template-columns:1fr 1fr;}
 }
+.country-label{background:transparent;border:none;box-shadow:none;color:#fff;font-weight:700;font-size:11px;text-shadow:0 0 3px #000,0 0 3px #000;padding:0;pointer-events:none;}
+.country-label::before{display:none;}
 </style>
 </head>
 <body>
@@ -891,6 +893,18 @@ function loadCountriesGeo(){
     FZ_GEO=out; return out;
   }).catch(function(){ FZ_GEO=[]; return []; });
 }
+// Ülke sınırları + adları (uydu üstüne). countries.geojson SW önbellekte → çevrimdışı da çalışır.
+function loadCountryBorders(){
+  fetch('countries.geojson?v=4').then(function(r){return r.json();}).then(function(gj){
+    L.geoJSON(gj,{interactive:false,
+      style:function(){ return {color:'#ffd43b',weight:1,opacity:.7,fill:false}; },
+      onEachFeature:function(f,layer){
+        var nm=(f.properties&&(f.properties.tr||f.properties.name))||'';
+        if(nm) layer.bindTooltip(nm,{permanent:true,direction:'center',className:'country-label'});
+      }
+    }).addTo(MAP);
+  }).catch(function(){});
+}
 function _pip(x,y,ring){ var inside=false,n=ring.length,j=n-1; for(var i=0;i<n;i++){ var xi=ring[i][0],yi=ring[i][1],xj=ring[j][0],yj=ring[j][1]; if(((yi>y)!==(yj>y)) && (x<(xj-xi)*(y-yi)/((yj-yi)||1e-12)+xi)) inside=!inside; j=i; } return inside; }
 function countryOfJS(lat,lon){
   if(!FZ_GEO) return '';
@@ -977,15 +991,16 @@ document.getElementById('btnFeasSubmit').onclick=async function(){
 async function loadWells(forceOnline){
   if(!forceOnline){ var cached=await idbGet('wells'); if(cached&&cached.wells&&cached.wells.length){ WELLS=cached.wells; return {from:'cache',ts:cached.ts}; } }
   if(!navigator.onLine){ var c2=await idbGet('wells'); if(c2&&c2.wells){ WELLS=c2.wells; return {from:'cache'}; } return {from:'none'}; }
-  var cols='well_id,lat,lon,name,country,year,partner,responsible,contact';
+  var cols='well_id,lat,lon,name,country,year,partner,responsible,contact,last_inspection';
   var all=[], page=0, size=1000;
   while(page<=50){
     var r=await sb.from('wells').select(cols).range(page*size,page*size+size-1);
     if(r.error){
+      if(cols.indexOf('last_inspection')>=0){ cols='well_id,lat,lon,name,country,year,partner,responsible,contact'; all=[]; page=0; continue; }  // son denetim kolonu yoksa
       if(cols.indexOf('responsible')>=0){ cols='well_id,lat,lon,name,country,year,partner'; all=[]; page=0; continue; }  // kolonlar henüz yoksa temel select'e düş
       break;
     }
-    var rows=r.data||[]; all=all.concat(rows.map(function(w){return [w.lat,w.lon,w.well_id,w.name,w.country||'',w.year||'',w.partner||'',w.responsible||'',w.contact||''];}));
+    var rows=r.data||[]; all=all.concat(rows.map(function(w){return [w.lat,w.lon,w.well_id,w.name,w.country||'',w.year||'',w.partner||'',w.responsible||'',w.contact||'',w.last_inspection||''];}));
     if(rows.length<size) break; page++;
   }
   if(all.length){ WELLS=all; await idbSet('wells',{wells:all,ts:Date.now()}); return {from:'online',count:all.length}; }
@@ -998,7 +1013,8 @@ async function initMapTab(){
     MAP=L.map('map',{minZoom:2,maxZoom:18}).setView([20,10],3);   // maxZoom=yerel zoom (aşırı yakınlaştırma yok)
     var satGoogle=L.tileLayer('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{subdomains:['0','1','2','3'],maxZoom:18,maxNativeZoom:20,attribution:'Kaynak: Google, CNES / Airbus, Maxar Technologies'});
     satGoogle.addTo(MAP);   // uydu = Google (Esri gizli)
-    WCLUSTER=L.markerClusterGroup({chunkedLoading:true,maxClusterRadius:60}); MAP.addLayer(WCLUSTER);
+    WCLUSTER=L.layerGroup(); MAP.addLayer(WCLUSTER);   // KÜMELEME YOK — her konum ayrı
+    loadCountryBorders();   // ülke sınırları + adları
     var info=document.getElementById('wellsInfo'); info.textContent='Kuyular yükleniyor…';
     var res=await loadWells(false); renderWells(); populateMapFilters();
     info.textContent=(res.from==='none')?'Kuyu verisi yok — çevrimiçiyken "Kuyuları Güncelle".':(WELLS.length+' kuyu'+(res.from==='cache'?' (önbellek)':(res.from==='online'?' (güncel)':'')));
@@ -1079,6 +1095,7 @@ function wellPopupHTML(w){
   var h='<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')+(w[4]?('<br><span style="opacity:.7">'+esc(w[4])+'</span>'):'');
   h+='<br><span style="opacity:.7">Su Kuyusu Sorumlusu:</span> '+(resp?esc(resp):'—');
   h+='<br><span style="opacity:.7">Sorumlu İletişim:</span> '+(contact?esc(contact):'—');
+  h+='<br><span style="opacity:.7">Son Denetim:</span> '+(w[9]?('🟠 '+esc(w[9])):'Denetlenmedi');
   h+='<div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap;">'+
      '<button onclick="openRespWell(\''+enc+'\')" style="border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 Yeni Yanıt</button>'+
      '<button onclick="showWellImage(\''+enc+'\')" style="border:1px solid #252b38;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#1e2330;color:#f0ede8;cursor:pointer;">🖼️ Görsel</button>'+
@@ -1114,7 +1131,8 @@ function closeWellImage(){ document.getElementById('imgOverlay').style.display='
 function renderWells(){
   if(!WCLUSTER) return; WCLUSTER.clearLayers();
   var list=wellsMatching();
-  list.forEach(function(w){ var m=L.circleMarker([w[0],w[1]],{radius:8,color:'#2e74e0',fillColor:'#2e74e0',weight:2,fillOpacity:.75});
+  list.forEach(function(w){ var col=w[9]?'#ff8c1a':'#2e74e0';   // denetim yanıtı varsa TURUNCU
+    var m=L.circleMarker([w[0],w[1]],{radius:8,color:col,fillColor:col,weight:2,fillOpacity:.75});
     m.bindPopup(wellPopupHTML(w));
     WCLUSTER.addLayer(m); });
   var info=document.getElementById('mapFiltInfo');
