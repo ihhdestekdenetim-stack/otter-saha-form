@@ -88,6 +88,8 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
 }
 .country-label{background:transparent;border:none;box-shadow:none;color:#fff;font-weight:700;font-size:11px;text-shadow:0 0 3px #000,0 0 3px #000;padding:0;pointer-events:none;}
 .country-label::before{display:none;}
+.cgrp{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,185,198,.92);border:2px solid #00B9C6;color:#06232a;font:700 15px/1 sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.45);cursor:pointer;text-align:center;}
+.cgrp b{font-size:9px;font-weight:600;margin-top:2px;max-width:92%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -204,6 +206,7 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
       </div>
       <div class="row" style="margin-bottom:10px;">
         <span class="muted" id="mapFiltInfo"></span>
+        <button class="btn ghost sm hide" id="grpBack">← Tüm Ülkeler</button>
         <button class="btn ghost sm" id="btnMapFiltClear">Filtreyi Temizle</button>
       </div>
       <div id="map" style="height:62vh;min-height:360px;border:1px solid var(--border);border-radius:12px;background:#0a0c10;"></div>
@@ -1086,7 +1089,7 @@ function applyMapFilter(fit){
   if(fit){ var list=wellsMatching(); if(list.length && MAP){ try{ var b=L.latLngBounds(list.map(function(w){return [w[0],w[1]];})); MAP.fitBounds(b.pad(0.2)); }catch(e){} } }
 }
 function onMapMselChange(dim){
-  if(dim==='country'){ renderMsel('country'); renderMsel('partner'); renderMsel('year'); }
+  if(dim==='country'){ GRP_COUNTRY=null; renderMsel('country'); renderMsel('partner'); renderMsel('year'); }
   else if(dim==='partner'){ renderMsel('partner'); renderMsel('year'); }
   else { renderMsel('year'); }
   applyMapFilter(true);
@@ -1096,13 +1099,14 @@ function toggleMsel(box){
   [].slice.call(document.querySelectorAll('.msel-panel')).forEach(function(p){p.classList.add('hide');});
   if(wasHidden) panel.classList.remove('hide');
 }
-function clearMapFilter(){ MAP_FILTER={country:[],partner:[],year:[]}; var mi=document.getElementById('mapInsp'); if(mi) mi.value=''; populateMapFilters(); applyMapFilter(false); }
+function clearMapFilter(){ MAP_FILTER={country:[],partner:[],year:[]}; var mi=document.getElementById('mapInsp'); if(mi) mi.value=''; GRP_COUNTRY=null; populateMapFilters(); applyMapFilter(false); }
 function searchWells(){
   var raw=(document.getElementById('mapSearch').value||'').trim(); var q=nkey(raw); if(!q) return;
   function hits(pool){ return pool.filter(function(w){ return nkey(String(w[2])).indexOf(q)>=0 || nkey(String(w[3]||'')).indexOf(q)>=0; }); }
   var hit=hits(wellsMatching()); if(!hit.length) hit=hits(WELLS);
   if(!hit.length){ show('globalMsg','Eşleşen kuyu yok: '+esc(raw),false); return; }
   var w=hit[0];
+  GRP_COUNTRY=w[4]||'(Ülkesiz)'; renderWells();        // bulunan kuyunun ülkesini aç (tek tek)
   if(MAP){ MAP.setView([w[0],w[1]],16);
     L.popup().setLatLng([w[0],w[1]]).setContent(wellPopupHTML(w)).openOn(MAP);
   }
@@ -1148,16 +1152,40 @@ async function showWellImage(encId){
   }).join('');
 }
 function closeWellImage(){ document.getElementById('imgOverlay').style.display='none'; }
+// ── 2 seviyeli grup: ÜLKE baloncukları → ülkeye tıkla → o ülkenin kuyuları TEK TEK ──
+var GRP_COUNTRY=null;   // null = ülke baloncukları; "ÜLKE" = o ülkenin kuyuları
 function renderWells(){
   if(!WCLUSTER) return; WCLUSTER.clearLayers();
   var list=wellsMatching();
-  list.forEach(function(w){ var col=w[9]?'#ff8c1a':'#2e74e0';   // denetim yanıtı varsa TURUNCU
-    var m=L.circleMarker([w[0],w[1]],{radius:8,color:col,fillColor:col,weight:2,fillOpacity:.75});
-    m.bindPopup(wellPopupHTML(w));
-    WCLUSTER.addLayer(m); });
-  var info=document.getElementById('mapFiltInfo');
-  if(info){ var tot=WELLS.length, shown=list.length; info.textContent=(shown===tot)?(tot+' kuyu'):(shown+' / '+tot+' kuyu (filtreli)'); }
+  var info=document.getElementById('mapFiltInfo'), back=document.getElementById('grpBack');
+  if(GRP_COUNTRY==null){                                   // ÜLKEYE GÖRE GRUPLA
+    var groups={};
+    list.forEach(function(w){ var c=w[4]||'(Ülkesiz)'; (groups[c]=groups[c]||[]).push(w); });
+    var keys=Object.keys(groups).sort(function(a,b){return groups[b].length-groups[a].length;});
+    keys.forEach(function(c){
+      var g=groups[c], la=0, lo=0; g.forEach(function(w){la+=w[0];lo+=w[1];}); la/=g.length; lo/=g.length;
+      var n=g.length, s=n<10?44:(n<100?52:(n<1000?62:72));
+      var ic=L.divIcon({className:'',iconSize:[s,s],iconAnchor:[s/2,s/2],
+        html:'<div class="cgrp" style="width:'+s+'px;height:'+s+'px;">'+n+'<b>'+esc(c)+'</b></div>'});
+      var m=L.marker([la,lo],{icon:ic});
+      m.on('click',function(){ GRP_COUNTRY=c; renderWells();
+        try{ MAP.fitBounds(L.latLngBounds(g.map(function(w){return [w[0],w[1]];})).pad(0.2)); }catch(e){} });
+      WCLUSTER.addLayer(m);
+    });
+    if(back) back.classList.add('hide');
+    if(info) info.textContent=keys.length+' ülke · '+list.length+' kuyu — ülkeye tıkla';
+  } else {                                                 // SEÇİLİ ÜLKE — TEK TEK (gruplama yok)
+    var sub=list.filter(function(w){ return (w[4]||'(Ülkesiz)')===GRP_COUNTRY; });
+    sub.forEach(function(w){ var col=w[9]?'#ff8c1a':'#2e74e0';   // denetlenmiş turuncu
+      var m=L.circleMarker([w[0],w[1]],{radius:8,color:col,fillColor:col,weight:2,fillOpacity:.75});
+      m.bindPopup(wellPopupHTML(w));
+      WCLUSTER.addLayer(m); });
+    if(back){ back.classList.remove('hide'); back.textContent='← Tüm Ülkeler'; }
+    if(info) info.textContent=GRP_COUNTRY+' · '+sub.length+' kuyu';
+  }
 }
+function grpBackToCountries(){ GRP_COUNTRY=null; renderWells();
+  var list=wellsMatching(); if(list.length && MAP){ try{ MAP.fitBounds(L.latLngBounds(list.map(function(w){return [w[0],w[1]];})).pad(0.2)); }catch(e){} } }
 // Türkçe-duyarlı normalize (İ/ı → i, aksan katla) — dropdown eşlemesi için
 function nkey(s){ return (s==null?'':String(s)).replace(/ı/g,'i').replace(/İ/g,'i').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
 function matchOpt(fieldId, value){
@@ -1257,6 +1285,7 @@ document.getElementById('btnLocate').onclick=function(){ startGPS(); };
 ['mselCountry','mselPartner','mselYear'].forEach(function(id){ var box=document.getElementById(id); if(box) box.querySelector('.msel-btn').onclick=function(){ toggleMsel(box); }; });
 document.addEventListener('click',function(e){ if(!e.target.closest('.msel')){ [].slice.call(document.querySelectorAll('.msel-panel')).forEach(function(p){p.classList.add('hide');}); } });
 document.getElementById('btnMapFiltClear').onclick=clearMapFilter;
+(function(){ var gb=document.getElementById('grpBack'); if(gb) gb.onclick=grpBackToCountries; })();
 (function(){ var mi=document.getElementById('mapInsp'); if(mi) mi.onchange=function(){ populateMapFilters(); applyMapFilter(true); }; })();
 document.getElementById('btnMapSearch').onclick=searchWells;
 document.getElementById('mapSearch').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); searchWells(); } });
