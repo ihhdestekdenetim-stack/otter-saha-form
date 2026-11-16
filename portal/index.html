@@ -769,6 +769,7 @@ async function saveResponse(submit){
   var out=await sendWrite(function(){ return applyItem(item); }, item);
   btnD.disabled=btnS.disabled=false;
   if(out.error){ show('respFormMsg','Kaydedilemedi: '+out.error.message,false); return; }
+  if(submit) markLocalInspected(data['fnv07eqsz']);   // kuyu ANINDA mor (yerel; w[9] gelince turuncu)
   if(out.queued){ show('respFormMsg','Çevrimdışı kaydedildi — internet gelince gönderilecek.',true); updateNet(); setTimeout(closeResponse,900); return; }
   show('respFormMsg',submit?'Gönderildi, admin onayına düştü.':'Taslak kaydedildi.',true);
   await loadResponses(); setTimeout(closeResponse,700);
@@ -1034,6 +1035,7 @@ async function initMapTab(){
     WCLUSTER=L.layerGroup(); MAP.addLayer(WCLUSTER);   // KÜMELEME YOK — her konum ayrı
     loadCountryBorders();   // ülke sınırları + adları
     var info=document.getElementById('wellsInfo'); info.textContent='Kuyular yükleniyor…';
+    await loadInspLocal();   // yerel mor işaretleri (çevrimdışı) yükle
     var res=await loadWells(false); renderWells(); populateMapFilters();
     info.textContent=(res.from==='none')?'Kuyu verisi yok — çevrimiçiyken "Kuyuları Güncelle".':(WELLS.length+' kuyu'+(res.from==='cache'?' (önbellek)':(res.from==='online'?' (güncel)':'')));
   }
@@ -1119,7 +1121,7 @@ function wellPopupHTML(w){
   var h='<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')+(w[4]?('<br><span style="opacity:.7">'+esc(w[4])+'</span>'):'');
   h+='<br><span style="opacity:.7">Su Kuyusu Sorumlusu:</span> '+(resp?esc(resp):'—');
   h+='<br><span style="opacity:.7">Sorumlu İletişim:</span> '+(contact?esc(contact):'—');
-  h+='<br><span style="opacity:.7">Son Denetim:</span> '+(w[9]?('🟠 '+esc(w[9])):'Denetlenmedi');
+  h+='<br><span style="opacity:.7">Son Denetim:</span> '+(w[9]?('🟠 '+esc(w[9])):(INSP_LOCAL.has(String(w[2]))?'🟣 Yerel dolduruldu (senkron bekliyor)':'Denetlenmedi'));
   h+='<div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap;">'+
      '<button onclick="openRespWell(\''+enc+'\')" style="border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 Yeni Yanıt</button>'+
      '<button onclick="showWellImage(\''+enc+'\')" style="border:1px solid #252b38;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#1e2330;color:#f0ede8;cursor:pointer;">🖼️ Görsel</button>'+
@@ -1152,6 +1154,18 @@ async function showWellImage(encId){
   }).join('');
 }
 function closeWellImage(){ document.getElementById('imgOverlay').style.display='none'; }
+// ── Yerel denetim işareti (MOR): saha kullanıcısı form doldurunca kuyu ANINDA mor;
+// sistem onaylayınca (w[9]=last_inspection gelince) turuncuya döner. idb'de kalıcı (çevrimdışı). ──
+var INSP_LOCAL=new Set();
+function loadInspLocal(){ return idbGet('insp_local').then(function(a){ if(Array.isArray(a)) a.forEach(function(x){INSP_LOCAL.add(String(x));}); }).catch(function(){}); }
+function saveInspLocal(){ try{ idbSet('insp_local', Array.from(INSP_LOCAL)); }catch(e){} }
+function markLocalInspected(wid){ wid=String(wid==null?'':wid).trim(); if(!wid) return; INSP_LOCAL.add(wid); saveInspLocal(); if(MAP) renderWells(); }
+function wellColor(w){                                    // mavi / mor / turuncu
+  var wid=String(w[2]);
+  if(w[9]){ if(INSP_LOCAL.has(wid)){ INSP_LOCAL.delete(wid); saveInspLocal(); } return '#ff8c1a'; }  // onaylandı→turuncu
+  if(INSP_LOCAL.has(wid)) return '#9b59b6';              // yerel doldurulmuş→MOR (senkron bekliyor)
+  return '#2e74e0';                                       // denetlenmedi→mavi
+}
 // ── 2 seviyeli grup: ÜLKE baloncukları → ülkeye tıkla → o ülkenin kuyuları TEK TEK ──
 var GRP_COUNTRY=null;   // null = ülke baloncukları; "ÜLKE" = o ülkenin kuyuları
 function renderWells(){
@@ -1176,7 +1190,7 @@ function renderWells(){
     if(info) info.textContent=keys.length+' ülke · '+list.length+' kuyu — ülkeye tıkla';
   } else {                                                 // SEÇİLİ ÜLKE — TEK TEK (gruplama yok)
     var sub=list.filter(function(w){ return (w[4]||'(Ülkesiz)')===GRP_COUNTRY; });
-    sub.forEach(function(w){ var col=w[9]?'#ff8c1a':'#2e74e0';   // denetlenmiş turuncu
+    sub.forEach(function(w){ var col=wellColor(w);   // mavi / mor(yerel) / turuncu(onaylı)
       var m=L.circleMarker([w[0],w[1]],{radius:8,color:col,fillColor:col,weight:2,fillOpacity:.75});
       m.bindPopup(wellPopupHTML(w));
       WCLUSTER.addLayer(m); });
