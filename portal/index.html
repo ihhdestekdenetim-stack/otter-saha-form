@@ -190,6 +190,26 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
         #secVakif .vk-imgbtn{border:1px solid #252b38;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;background:#1e2330;color:#f0ede8;cursor:pointer;}
         @media(max-width:560px){#secVakif .vk-g,#secVakif .vk-g.two{grid-template-columns:repeat(2,1fr);}}
         @media(max-width:380px){#secVakif .vk-g,#secVakif .vk-g.two{grid-template-columns:1fr;}}
+        /* ÇIKTI (yazdırma): koyu tema çıktıda silik kalıyor → beyaz zemin + net siyah metin */
+        @media print {
+          @page { margin: 12mm; }
+          html, body { background:#fff !important; }
+          #appView header, #globalMsg,
+          #secVakif .vk-bar, #secVakif #vkListView, #secVakif #vkBack,
+          #secVakif .vk-btn, #secVakif .vk-imgbtn { display:none !important; }
+          #secVakif, #secVakif * { color:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+          #secVakif .vk-card, #secVakif .vk-s, #secVakif .vk-f,
+          #secVakif .vk-insp, #secVakif .vk-insp .ibar, #secVakif .vk-insp .ibody,
+          #secVakif .vk-memo { background:#fff !important; border:1px solid #777 !important; box-shadow:none !important; }
+          #secVakif .vk-hero { background:#fff !important; border:2px solid #000 !important; border-radius:10px !important; }
+          #secVakif .vk-hero .nm { color:#000 !important; }
+          #secVakif .vk-hero .ch, #secVakif .vk-hero .ch.st,
+          #secVakif .vk-pill, #secVakif .vk-chv { background:#fff !important; border:1px solid #555 !important; color:#000 !important; }
+          #secVakif .vk-f .k, #secVakif .sub-h, #secVakif table.vkt th,
+          #secVakif .vk-insp .iby { color:#333 !important; }
+          #secVakif table.vkt th, #secVakif table.vkt td { border-bottom:1px solid #999 !important; }
+          #secVakif .vk-insp { break-inside:avoid; }
+        }
       </style>
       <div id="vkListView">
         <div class="vk-bar">
