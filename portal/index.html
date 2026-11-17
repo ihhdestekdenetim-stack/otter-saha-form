@@ -1396,7 +1396,7 @@ function vkDetailHTML(f){
   var coord=hasc?(Number(f.lat).toFixed(6)+', '+Number(f.lon).toFixed(6)):'—';
   var h='<div class="vk-hero"><div class="nm">'+vkVal(f.name)+'</div><div class="chips">'+
     '<span class="ch">🆔 Portal Vakıf Eser ID · '+vkVal(f.portal_id)+'</span>'+
-    '<span class="ch">🧭 '+esc(coord)+'</span>'+vkHeroStatus(f)+'</div></div>';
+    '<span class="ch">🧭 Koordinat: '+esc(coord)+'</span>'+vkHeroStatus(f)+'</div></div>';
   h+='<div class="vk-card">';
   h+='<div class="vk-s"><h3>Vakıf Eser Künyesi</h3>'+
      '<div class="vk-g">'+vkF('Ülke',f.country)+vkF('Şehir',f.sehir)+vkF('Mahalle / Köy',f.mahalle)+'</div>'+
