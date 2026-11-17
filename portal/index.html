@@ -1268,7 +1268,7 @@ function closeWellImage(){ document.getElementById('imgOverlay').style.display='
 // ── Vakıf Eser Bilgi Formları (Supabase vakif_forms → künye + tüm denetimler) ──
 var VFORMS=null, VK_COUNTRIES=[], VK_COUNTRY=null, _vkInited=false;
 function _vkRatingField(){ try{ return (OTTER_FORM.fields||[]).filter(function(f){return f.type==='datatable';})[0]||null; }catch(e){ return null; } }
-function vkVal(x){ return (x==null||x==='')?'—':esc(String(x)); }
+function vkVal(x){ return (x==null||x==='')?'':esc(String(x)); }   // boş alan → boş göster
 async function initVakifTab(){
   if(_vkInited) return; _vkInited=true;
   var res=await loadVakif(false); vkAfterLoad(res);
@@ -1341,7 +1341,7 @@ function vkSearch(){
   document.getElementById('vkInfo').textContent=hit.length+' eşleşme.';
 }
 function vkF(k,v,unit){
-  var val=(v==null||v==='')?'—':(esc(String(v))+(unit?(' <span style="color:#7a8099;font-weight:500">'+unit+'</span>'):''));
+  var val=(v==null||v==='')?'':(esc(String(v))+(unit?(' <span style="color:#7a8099;font-weight:500">'+unit+'</span>'):''));
   return '<div class="vk-f"><div class="k">'+esc(k)+'</div><div class="v">'+val+'</div></div>';
 }
 function vkHeroStatus(f){
@@ -1350,7 +1350,7 @@ function vkHeroStatus(f){
   return '<span class="ch st" style="color:#7a8099">● Denetlenmedi</span>';
 }
 function vkYN(v,good){
-  var s=String(v==null?'':v).trim(); if(!s) return '<span class="vk-pill p-un">—</span>';
+  var s=String(v==null?'':v).trim(); if(!s) return '';   // boş → boş göster
   return '<span class="vk-pill '+(s===good?'p-ok':'p-no')+'">'+esc(s)+'</span>';
 }
 function vkRatingTable(rating){
@@ -1393,10 +1393,12 @@ function vkInspHTML(it, first){
 function vkDetailHTML(f){
   var enc=encodeURIComponent(f.well_id);
   var hasc=(f.lat!=null&&f.lat!==''&&f.lon!=null&&f.lon!=='');
-  var coord=hasc?(Number(f.lat).toFixed(6)+', '+Number(f.lon).toFixed(6)):'—';
+  var coord=hasc?(Number(f.lat).toFixed(6)+', '+Number(f.lon).toFixed(6)):'';
   var h='<div class="vk-hero"><div class="nm">'+vkVal(f.name)+'</div><div class="chips">'+
-    '<span class="ch">🆔 Portal Vakıf Eser ID · '+vkVal(f.portal_id)+'</span>'+
-    '<span class="ch">🧭 Koordinat: '+esc(coord)+'</span>'+vkHeroStatus(f)+'</div></div>';
+    '<span class="ch">🆔 Su Kuyusu ID: '+vkVal(f.well_id)+'</span>'+
+    '<span class="ch">🧭 Koordinat: '+esc(coord)+'</span>'+
+    '<span class="ch">🏛️ Portal Vakıf Eser ID: '+vkVal(f.portal_id)+'</span>'+
+    vkHeroStatus(f)+'</div></div>';
   h+='<div class="vk-card">';
   h+='<div class="vk-s"><h3>Vakıf Eser Künyesi</h3>'+
      '<div class="vk-g">'+vkF('Ülke',f.country)+vkF('Şehir',f.sehir)+vkF('Mahalle / Köy',f.mahalle)+'</div>'+
