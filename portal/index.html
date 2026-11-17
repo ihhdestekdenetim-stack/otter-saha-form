@@ -198,10 +198,18 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
           #secVakif .vk-bar, #secVakif #vkListView, #secVakif #vkBack,
           #secVakif .vk-btn, #secVakif .vk-imgbtn { display:none !important; }
           #secVakif, #secVakif * { color:#000 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-          #secVakif .vk-card, #secVakif .vk-s, #secVakif .vk-f,
-          #secVakif .vk-insp, #secVakif .vk-insp .ibar, #secVakif .vk-insp .ibody,
-          #secVakif .vk-memo { background:#fff !important; border:1px solid #777 !important; box-shadow:none !important; }
-          #secVakif .vk-hero { background:#fff !important; border:2px solid #000 !important; border-radius:10px !important; }
+          /* her alan KENDİ çerçevesinde; grupları tek büyük çerçeve ile SARMA */
+          #secVakif .vk-card, #secVakif .vk-s,
+          #secVakif .vk-insp .ibar, #secVakif .vk-insp .ibody {
+            background:#fff !important; border:none !important; box-shadow:none !important;
+            padding-left:0 !important; padding-right:0 !important; }
+          #secVakif .vk-f, #secVakif .vk-memo {
+            background:#fff !important; border:1px solid #777 !important; box-shadow:none !important; }
+          #secVakif .vk-insp { background:#fff !important; border:none !important;
+            border-top:1px solid #bbb !important; box-shadow:none !important; }
+          #secVakif .vk-hero { background:#fff !important; border:none !important;
+            border-bottom:2px solid #000 !important; border-radius:0 !important;
+            padding-left:0 !important; padding-right:0 !important; }
           #secVakif .vk-hero .nm { color:#000 !important; }
           #secVakif .vk-hero .ch, #secVakif .vk-hero .ch.st,
           #secVakif .vk-pill, #secVakif .vk-chv { background:#fff !important; border:1px solid #555 !important; color:#000 !important; }
