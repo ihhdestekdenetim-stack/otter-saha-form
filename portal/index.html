@@ -146,12 +146,64 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
       </div>
     </section>
 
-    <!-- Vakıf Eser (içerik sonra doldurulacak) -->
+    <!-- Vakıf Eser Bilgi Formları (her kuyu: künye + tüm denetimler) -->
     <section id="secVakif" class="hide">
-      <div class="card" style="text-align:center;padding:36px 16px;">
-        <div style="font-size:40px;margin-bottom:10px;">🏛️</div>
-        <b>Vakıf Eser</b>
-        <div class="muted" style="margin-top:8px;">Bu modül yapım aşamasında. İçerik yakında eklenecek.</div>
+      <style>
+        #secVakif .vk-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+        #secVakif .vk-bar input{flex:1;min-width:140px;background:#1d2130;border:1.5px solid #252b38;border-radius:9px;color:#f0ede8;font-size:13px;padding:9px 11px;font-family:inherit;}
+        #secVakif .vk-btn{border:1px solid #252b38;border-radius:9px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;background:#1e2330;color:#c8c4bc;font-family:inherit;}
+        #secVakif .vk-info{font-size:12.5px;color:#7a8099;margin-bottom:10px;}
+        #secVakif .vk-row{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#161a22;border:1px solid #252b38;border-radius:12px;margin-bottom:8px;cursor:pointer;}
+        #secVakif .vk-row:active{border-color:#00B9C6;}
+        #secVakif .vk-row .nm{font-weight:600;font-size:14px;}
+        #secVakif .vk-row .id{font-size:12px;color:#7a8099;margin-top:2px;}
+        #secVakif .vk-row .cnt{margin-left:auto;font-size:12px;color:#7a8099;white-space:nowrap;}
+        #secVakif .vk-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;}
+        #secVakif .p-ok{background:rgba(46,193,107,.16);color:#2ec16b;}
+        #secVakif .p-no{background:rgba(224,92,107,.16);color:#e05c6b;}
+        #secVakif .p-un{background:rgba(122,128,153,.16);color:#9aa0b5;}
+        #secVakif .vk-hero{background:linear-gradient(135deg,#06838c,#00B9C6);color:#fff;padding:16px;border-radius:14px 14px 0 0;}
+        #secVakif .vk-hero .nm{font-size:18px;font-weight:700;line-height:1.2;}
+        #secVakif .vk-hero .chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+        #secVakif .vk-hero .ch{background:rgba(255,255,255,.18);padding:5px 10px;border-radius:999px;font-size:12px;font-weight:600;}
+        #secVakif .vk-hero .ch.st{background:#fff;margin-left:auto;}
+        #secVakif .vk-card{background:#161a22;border:1px solid #252b38;border-top:none;border-radius:0 0 14px 14px;}
+        #secVakif .vk-s{padding:14px 16px;border-top:1px solid #252b38;}
+        #secVakif .vk-s h3{font-size:13px;font-weight:600;color:#c8c4bc;margin:0 0 10px;}
+        #secVakif .vk-g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+        #secVakif .vk-g.two{grid-template-columns:repeat(2,1fr);}
+        #secVakif .vk-f{background:#1e2330;border:1px solid #252b38;border-radius:9px;padding:8px 10px;min-width:0;}
+        #secVakif .vk-f .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:#7a8099;font-weight:600;}
+        #secVakif .vk-f .v{font-size:13px;font-weight:600;margin-top:2px;word-break:break-word;}
+        #secVakif .vk-insp{border:1px solid #252b38;border-radius:12px;margin-bottom:12px;overflow:hidden;}
+        #secVakif .vk-insp.first{border-color:#00B9C6;box-shadow:0 0 0 1px #00B9C6;}
+        #secVakif .vk-insp .ibar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px;background:#1e2330;border-bottom:1px solid #252b38;}
+        #secVakif .vk-insp .idate{font-weight:700;font-size:14px;}
+        #secVakif .vk-insp .iby{margin-left:auto;font-size:12px;color:#7a8099;}
+        #secVakif .vk-insp .ibody{padding:12px;}
+        #secVakif .vk-chv{display:inline-block;background:rgba(0,185,198,.14);color:#4fd3dd;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;margin:2px 4px 0 0;}
+        #secVakif table.vkt{width:100%;border-collapse:collapse;font-size:12.5px;min-width:300px;}
+        #secVakif table.vkt th,#secVakif table.vkt td{text-align:left;padding:6px 8px;border-bottom:1px solid #252b38;}
+        #secVakif table.vkt th{font-size:11px;text-transform:uppercase;color:#7a8099;font-weight:600;}
+        #secVakif .vk-memo{background:#1e2330;border:1px solid #252b38;border-left:3px solid #00B9C6;border-radius:9px;padding:10px 12px;font-size:13px;}
+        #secVakif .sub-h{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#7a8099;font-weight:700;margin:12px 0 5px;}
+        #secVakif .vk-imgbtn{border:1px solid #252b38;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;background:#1e2330;color:#f0ede8;cursor:pointer;}
+        @media(max-width:560px){#secVakif .vk-g,#secVakif .vk-g.two{grid-template-columns:repeat(2,1fr);}}
+        @media(max-width:380px){#secVakif .vk-g,#secVakif .vk-g.two{grid-template-columns:1fr;}}
+      </style>
+      <div id="vkListView">
+        <div class="vk-bar">
+          <input id="vkSearch" type="text" placeholder="Kuyu adı / ID ara…" onkeydown="if(event.key==='Enter'){event.preventDefault();vkSearch();}"/>
+          <button class="vk-btn" onclick="vkSearch()">Ara</button>
+          <button class="vk-btn" onclick="loadVakif(true).then(vkAfterLoad)">⟳ Güncelle</button>
+        </div>
+        <div class="vk-info" id="vkInfo">Yükleniyor…</div>
+        <div id="vkBack" class="hide" style="margin-bottom:8px;"><button class="vk-btn" onclick="vkShowCountries()">← Tüm Ülkeler</button></div>
+        <div id="vkList"></div>
+      </div>
+      <div id="vkDetailView" class="hide">
+        <div style="margin-bottom:10px;"><button class="vk-btn" onclick="vkBackToList()">← Liste</button></div>
+        <div id="vkDetail"></div>
       </div>
     </section>
 
@@ -613,6 +665,7 @@ function showTab(t){
   document.getElementById('secReport').classList.toggle('hide',t!=='report');
   document.getElementById('secAcct').classList.toggle('hide',t!=='acct');
   if(t==='map') initMapTab();
+  if(t==='vakif') initVakifTab();
   if(t==='acct') renderAccount();
   document.getElementById('respForm').classList.add('hide');
   document.getElementById('revForm').classList.add('hide');
@@ -1211,6 +1264,155 @@ async function showWellImage(encId){
   }).join('');
 }
 function closeWellImage(){ document.getElementById('imgOverlay').style.display='none'; }
+
+// ── Vakıf Eser Bilgi Formları (Supabase vakif_forms → künye + tüm denetimler) ──
+var VFORMS=null, VK_COUNTRIES=[], VK_COUNTRY=null, _vkInited=false;
+function _vkRatingField(){ try{ return (OTTER_FORM.fields||[]).filter(function(f){return f.type==='datatable';})[0]||null; }catch(e){ return null; } }
+function vkVal(x){ return (x==null||x==='')?'—':esc(String(x)); }
+async function initVakifTab(){
+  if(_vkInited) return; _vkInited=true;
+  var res=await loadVakif(false); vkAfterLoad(res);
+}
+function vkAfterLoad(res){
+  vkShowCountries();
+  var el=document.getElementById('vkInfo');
+  el.textContent=(res && res.from==='none')?'Veri yok — çevrimiçiyken "⟳ Güncelle".'
+    :((VFORMS?VFORMS.length:0)+' kuyu'+(res&&res.from==='cache'?' (önbellek)':(res&&res.from==='online'?' (güncel)':'')));
+}
+async function loadVakif(forceOnline){
+  if(!forceOnline){ var c=await idbGet('vakif_forms'); if(c&&c.forms&&c.forms.length){ VFORMS=c.forms; return {from:'cache'}; } }
+  if(!navigator.onLine){ var c2=await idbGet('vakif_forms'); if(c2&&c2.forms){ VFORMS=c2.forms; return {from:'cache'}; } return {from:'none'}; }
+  var all=[], page=0, size=1000;
+  while(page<=50){
+    var r=await sb.from('vakif_forms').select('*').range(page*size,page*size+size-1);
+    if(r.error) break;
+    var rows=r.data||[]; all=all.concat(rows);
+    if(rows.length<size) break; page++;
+  }
+  if(all.length){ VFORMS=all; await idbSet('vakif_forms',{forms:all,ts:Date.now()}); return {from:'online',count:all.length}; }
+  var c3=await idbGet('vakif_forms'); if(c3&&c3.forms){ VFORMS=c3.forms; return {from:'cache'}; }
+  return {from:'none'};
+}
+function _vkView(v){
+  document.getElementById('vkListView').classList.toggle('hide',v!=='list');
+  document.getElementById('vkDetailView').classList.toggle('hide',v!=='detail');
+}
+function vkStatusPill(f){
+  if(f.status==='Çalışıyor') return '<span class="vk-pill p-ok">● Çalışıyor</span>';
+  if(f.status==='Çalışmıyor') return '<span class="vk-pill p-no">● Çalışmıyor</span>';
+  return '<span class="vk-pill p-un">● Denetlenmedi</span>';
+}
+function vkShowCountries(){
+  VK_COUNTRY=null; _vkView('list'); document.getElementById('vkBack').classList.add('hide');
+  var box=document.getElementById('vkList'); if(!VFORMS){ box.innerHTML=''; return; }
+  var cmap={}; VFORMS.forEach(function(f){ var c=f.country||'(Ülkesiz)'; cmap[c]=(cmap[c]||0)+1; });
+  VK_COUNTRIES=Object.keys(cmap).sort(function(a,b){return String(a).localeCompare(String(b),'tr');}).map(function(c){return {name:c,count:cmap[c]};});
+  box.innerHTML=VK_COUNTRIES.map(function(c,i){
+    return '<div class="vk-row" onclick="vkShowCountry('+i+')"><div class="nm">'+esc(c.name)+'</div><div class="cnt">'+c.count+' kuyu ›</div></div>';
+  }).join('')||'<div class="vk-info">Kuyu yok.</div>';
+}
+function vkShowCountry(i){
+  var c=VK_COUNTRIES[i]; if(!c) return; VK_COUNTRY=c.name;
+  _vkView('list'); document.getElementById('vkBack').classList.remove('hide');
+  var list=VFORMS.filter(function(f){return (f.country||'(Ülkesiz)')===c.name;})
+    .sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''),'tr');});
+  document.getElementById('vkList').innerHTML=list.map(vkRowHTML).join('')||'<div class="vk-info">Bu ülkede kuyu yok.</div>';
+}
+function vkRowHTML(f){
+  return '<div class="vk-row" onclick="vkOpen(\''+encodeURIComponent(f.well_id)+'\')">'+
+    '<div style="min-width:0"><div class="nm">'+esc(f.name||'(İsimsiz)')+'</div><div class="id">'+esc(f.well_id)+(VK_COUNTRY?'':(' · '+esc(f.country||'')))+'</div></div>'+
+    '<div class="cnt">'+vkStatusPill(f)+'</div></div>';
+}
+function vkFind(wid){ wid=String(wid); for(var i=0;i<(VFORMS||[]).length;i++){ if(String(VFORMS[i].well_id)===wid) return VFORMS[i]; } return null; }
+function vkOpen(enc){
+  var f=vkFind(decodeURIComponent(enc)); if(!f) return;
+  document.getElementById('vkDetail').innerHTML=vkDetailHTML(f);
+  _vkView('detail'); try{ window.scrollTo(0,0); }catch(e){}
+}
+function vkBackToList(){ _vkView('list'); }
+function vkSearch(){
+  var raw=(document.getElementById('vkSearch').value||'').trim(); if(!raw||!VFORMS) return;
+  var q=nkey(raw);
+  var hit=VFORMS.filter(function(f){ return nkey(String(f.well_id)).indexOf(q)>=0 || nkey(String(f.name||'')).indexOf(q)>=0; });
+  if(!hit.length){ document.getElementById('vkInfo').textContent='Eşleşen kuyu yok: '+raw; return; }
+  if(hit.length===1){ vkOpen(encodeURIComponent(hit[0].well_id)); return; }
+  VK_COUNTRY=null; _vkView('list'); document.getElementById('vkBack').classList.remove('hide');
+  document.getElementById('vkList').innerHTML=hit.slice(0,300).map(vkRowHTML).join('');
+  document.getElementById('vkInfo').textContent=hit.length+' eşleşme.';
+}
+function vkF(k,v,unit){
+  var val=(v==null||v==='')?'—':(esc(String(v))+(unit?(' <span style="color:#7a8099;font-weight:500">'+unit+'</span>'):''));
+  return '<div class="vk-f"><div class="k">'+esc(k)+'</div><div class="v">'+val+'</div></div>';
+}
+function vkHeroStatus(f){
+  if(f.status==='Çalışıyor') return '<span class="ch st" style="color:#1f9d57">● Çalışıyor</span>';
+  if(f.status==='Çalışmıyor') return '<span class="ch st" style="color:#d14343">● Çalışmıyor</span>';
+  return '<span class="ch st" style="color:#7a8099">● Denetlenmedi</span>';
+}
+function vkYN(v,good){
+  var s=String(v==null?'':v).trim(); if(!s) return '<span class="vk-pill p-un">—</span>';
+  return '<span class="vk-pill '+(s===good?'p-ok':'p-no')+'">'+esc(s)+'</span>';
+}
+function vkRatingTable(rating){
+  var fld=_vkRatingField(); var rows=(rating&&rating.rows)?rating.rows:null;
+  if(!fld||!rows) return '';
+  var rl=fld.rowLabels||[], cols=fld.columns||[], body='';
+  for(var i=0;i<rl.length;i++){
+    var rs=rows[i]||{}; body+='<tr><td style="font-weight:600">'+esc(rl[i])+'</td>';
+    for(var j=0;j<cols.length;j++){
+      var cv=rs['col'+j];
+      if(cols[j].type==='checkbox'){ var ok=Array.isArray(cv)&&cv.length;
+        body+='<td style="text-align:center">'+(ok?'<span style="color:#2ec16b;font-weight:700">✓</span>':'<span style="color:#7a8099">—</span>')+'</td>'; }
+      else { body+='<td>'+((cv==null||cv==='')?'—':esc(String(cv)))+'</td>'; }
+    }
+    body+='</tr>';
+  }
+  var head='<tr><th>Bileşen</th>'+cols.map(function(c){return '<th>'+esc(c.label)+'</th>';}).join('')+'</tr>';
+  return '<div class="sub-h">Durum ve Verim Değerlendirmesi</div><div style="overflow-x:auto"><table class="vkt"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
+}
+function vkInspHTML(it, first){
+  var usage=Array.isArray(it.usage)?it.usage:(it.usage?[it.usage]:[]);
+  var h='<div class="vk-insp'+(first?' first':'')+'">';
+  h+='<div class="ibar"><span class="idate">'+vkVal(it.date)+'</span>';
+  h+='<span class="iby">Denetleyen: '+vkVal(it.inspector)+(it.partner?(' · Partner: '+esc(String(it.partner))):'')+'</span></div>';
+  h+='<div class="ibody">';
+  h+='<div class="vk-g">'+
+     '<div class="vk-f"><div class="k">Çalışıyor mu?</div><div class="v">'+vkYN(it.working,'EVET')+'</div></div>'+
+     '<div class="vk-f"><div class="k">Koordinat</div><div class="v">'+vkYN(it.coord,'DOĞRU')+'</div></div>'+
+     '<div class="vk-f"><div class="k">Tamirat İhtiyacı</div><div class="v">'+vkYN(it.repair,'HAYIR')+'</div></div>'+
+     '</div>';
+  h+='<div class="vk-g two" style="margin-top:8px;">'+
+     '<div class="vk-f"><div class="k">Sağlık Şartları</div><div class="v">'+vkYN(it.health,'EVET')+'</div></div>'+
+     '<div class="vk-f"><div class="k">Kullanım Amaçları</div><div class="v" style="line-height:1.9">'+(usage.length?usage.map(function(u){return '<span class="vk-chv">'+esc(u)+'</span>';}).join(''):'—')+'</div></div>'+
+     '</div>';
+  h+=vkRatingTable(it.rating);
+  if(it.note){ h+='<div class="sub-h">Denetçi Açıklaması</div><div class="vk-memo">'+esc(String(it.note))+'</div>'; }
+  h+='</div></div>';
+  return h;
+}
+function vkDetailHTML(f){
+  var enc=encodeURIComponent(f.well_id);
+  var hasc=(f.lat!=null&&f.lat!==''&&f.lon!=null&&f.lon!=='');
+  var coord=hasc?(Number(f.lat).toFixed(6)+', '+Number(f.lon).toFixed(6)):'—';
+  var h='<div class="vk-hero"><div class="nm">'+vkVal(f.name)+'</div><div class="chips">'+
+    '<span class="ch">🆔 Portal Vakıf Eser ID · '+vkVal(f.portal_id)+'</span>'+
+    '<span class="ch">🧭 '+esc(coord)+'</span>'+vkHeroStatus(f)+'</div></div>';
+  h+='<div class="vk-card">';
+  h+='<div class="vk-s"><h3>Vakıf Eser Künyesi</h3>'+
+     '<div class="vk-g">'+vkF('Ülke',f.country)+vkF('Şehir',f.sehir)+vkF('Mahalle / Köy',f.mahalle)+'</div>'+
+     '<div class="vk-g" style="margin-top:8px;">'+vkF('Bölge Nüfusu',f.inhabitants)+vkF('Hane Sayısı',f.households)+vkF('Faydalanan',f.beneficiaries)+'</div>'+
+     '<div class="vk-g" style="margin-top:8px;">'+vkF('Su Kuyusu Derinliği',f.well_depth,'m')+vkF('Boru Derinliği',f.pipe_depth,'m')+vkF('Pompa Derinliği',f.pump_depth,'m')+'</div>'+
+     '<div class="vk-g two" style="margin-top:8px;">'+vkF('Su Kuyusu Sorumlusu',f.responsible)+vkF('Sorumlu İletişim',f.contact)+'</div>'+
+     '</div>';
+  var insp=f.inspections||[];
+  h+='<div class="vk-s"><h3>Denetim Durumu — '+insp.length+' denetim</h3>';
+  h+= insp.length ? insp.map(function(it,i){return vkInspHTML(it,i===0);}).join('')
+                  : '<div class="vk-info">Bu kuyu için denetim yanıtı yok.</div>';
+  h+='</div>';
+  h+='<div class="vk-s"><h3>Görseller</h3><button class="vk-imgbtn" onclick="showWellImage(\''+enc+'\')">🖼️ Görselleri Gör</button></div>';
+  h+='</div>';
+  return h;
+}
 // ── Yerel denetim işareti (MOR): saha kullanıcısı form doldurunca kuyu ANINDA mor;
 // sistem onaylayınca (w[9]=last_inspection gelince) turuncuya döner. idb'de kalıcı (çevrimdışı). ──
 var INSP_LOCAL=new Set();
