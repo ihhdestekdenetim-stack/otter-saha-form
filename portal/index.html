@@ -218,6 +218,30 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
           #secVakif table.vkt th, #secVakif table.vkt td { border-bottom:1px solid #999 !important; }
           #secVakif .vk-insp { break-inside:avoid; }
         }
+        /* PDF (html2canvas) baskı teması: ekran stilini çeker, @media print uygulanmaz →
+           PDF holder'ına .vk-print verilir; beyaz zemin + açık barlar (beyaz kağıt baskısı). */
+        #secVakif .vk-print{background:#fff;color:#14323a;}
+        #secVakif .vk-print .vk-hero{background:#fff;color:#14323a;border-bottom:3px solid #00B9C6;border-radius:0;padding-bottom:12px;}
+        #secVakif .vk-print .vk-hero .ch{background:#eef3f4;color:#14323a;}
+        #secVakif .vk-print .vk-hero .ch.st{background:#eef3f4;}
+        #secVakif .vk-print .vk-card{background:#fff;border:none;border-radius:0;box-shadow:none;}
+        #secVakif .vk-print .vk-s{border-top:1px solid #e2e2e2;}
+        #secVakif .vk-print .vk-s h3{color:#06838c;}
+        #secVakif .vk-print .vk-f{background:#f5f8f9;border-color:#e3e8ea;}
+        #secVakif .vk-print .vk-f .k{color:#5a6b72;}
+        #secVakif .vk-print .vk-f .v{color:#14323a;}
+        #secVakif .vk-print .vk-chv{background:#e2f7f9;color:#06838c;}
+        #secVakif .vk-print .vk-insp{border-color:#d8dee0;}
+        #secVakif .vk-print .vk-insp.first{box-shadow:none;border-color:#00B9C6;}
+        #secVakif .vk-print .vk-insp .ibar{background:#eef7f8;border-bottom-color:#d8dee0;}
+        #secVakif .vk-print .vk-insp .idate{color:#14323a;}
+        #secVakif .vk-print .vk-insp .iby{color:#5a6b72;}
+        #secVakif .vk-print table.vkt{color:#14323a;}
+        #secVakif .vk-print table.vkt th{color:#5a6b72;background:#f0f3f4;}
+        #secVakif .vk-print table.vkt th,#secVakif .vk-print table.vkt td{border-color:#dde3e5;}
+        #secVakif .vk-print .note-txt{color:#5a6b72;}
+        #secVakif .vk-print .vk-memo{background:#f5f8f9;border-color:#e3e8ea;color:#14323a;}
+        #secVakif .vk-print .sub-h{color:#5a6b72;}
       </style>
       <div id="vkListView">
         <div class="vk-bar">
@@ -1457,11 +1481,12 @@ async function vkExportPDF(enc, share){
   show('globalMsg','PDF hazırlanıyor…',true);
   var sec=document.getElementById('secVakif');
   var holder=document.createElement('div');   // gerçek kart (butonsuz), #secVakif içinde → vk-* stilleri uygulanır
-  holder.style.cssText='position:fixed;left:-99999px;top:0;width:860px;background:#0d0f14;padding:18px;box-sizing:border-box;z-index:-1;';
+  holder.className='vk-print';                 // beyaz kağıt baskısı için açık tema kaplaması
+  holder.style.cssText='position:fixed;left:-99999px;top:0;width:860px;background:#ffffff;padding:18px;box-sizing:border-box;z-index:-1;';
   holder.innerHTML=vkDetailHTML(f, true);
   sec.appendChild(holder);
   try{
-    var canvas=await html2canvas(holder,{scale:2,backgroundColor:'#0d0f14',useCORS:true,windowWidth:900});
+    var canvas=await html2canvas(holder,{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:900});
     sec.removeChild(holder);
     var jsPDF=window.jspdf.jsPDF, pdf=new jsPDF('p','mm','a4');
     var pw=210, ph=297, iw=pw, ih=canvas.height*pw/canvas.width;
