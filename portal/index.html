@@ -1420,15 +1420,15 @@ function vkInspHTML(it, first){
   h+='</div></div>';
   return h;
 }
-function vkDetailHTML(f){
+function vkDetailHTML(f, pdf){
   var enc=encodeURIComponent(f.well_id);
   var hasc=(f.lat!=null&&f.lat!==''&&f.lon!=null&&f.lon!=='');
   var coord=hasc?(Number(f.lat).toFixed(6)+', '+Number(f.lon).toFixed(6)):'';
-  var h='<div class="vk-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'+
+  var h = pdf ? '' : ('<div class="vk-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'+
     '<button class="vk-imgbtn" onclick="vkExportPDF(\''+enc+'\',false)">📄 PDF İndir</button>'+
     '<button class="vk-imgbtn" onclick="vkExportPDF(\''+enc+'\',true)">📤 WhatsApp\'ta Paylaş</button>'+
-    '</div>'+
-    '<div class="vk-hero"><div class="nm">'+vkVal(f.name)+'</div><div class="chips">'+
+    '</div>');
+  h+='<div class="vk-hero"><div class="nm">'+vkVal(f.name)+'</div><div class="chips">'+
     '<span class="ch">🆔 Su Kuyusu ID: '+vkVal(f.well_id)+'</span>'+
     '<span class="ch">🧭 Koordinat: '+esc(coord)+'</span>'+
     '<span class="ch">🏛️ Portal Vakıf Eser ID: '+vkVal(f.portal_id)+'</span>'+
@@ -1445,79 +1445,24 @@ function vkDetailHTML(f){
   h+= insp.length ? insp.map(function(it,i){return vkInspHTML(it,i===0);}).join('')
                   : '<div class="vk-info">Bu kuyu için denetim yanıtı yok.</div>';
   h+='</div>';
-  h+='<div class="vk-s"><h3>Görseller</h3><button class="vk-imgbtn" onclick="showWellImage(\''+enc+'\')">🖼️ Görselleri Gör</button></div>';
+  if(!pdf) h+='<div class="vk-s"><h3>Görseller</h3><button class="vk-imgbtn" onclick="showWellImage(\''+enc+'\')">🖼️ Görselleri Gör</button></div>';
   h+='</div>';
   return h;
 }
 
-// ── Vakıf Eser PDF (yazdırma düzeni → html2canvas → jsPDF) + WhatsApp paylaşım ──
-function _vkPF(k,v){
-  var val=(v==null||v==='')?'':esc(String(v));
-  return '<tr><td style="padding:4px 10px 4px 0;color:#555;font-size:12px;white-space:nowrap;vertical-align:top;width:40%;">'+esc(k)+'</td>'+
-         '<td style="padding:4px 0;font-size:13px;font-weight:600;">'+val+'</td></tr>';
-}
-function _vkPrintRating(rating){
-  var fld=_vkRatingField(); var rows=(rating&&rating.rows)?rating.rows:null; if(!fld||!rows) return '';
-  var rl=fld.rowLabels||[], cols=fld.columns||[], body='';
-  for(var i=0;i<rl.length;i++){ var rs=rows[i]||{}; body+='<tr><td style="border:1px solid #ddd;padding:3px 6px;">'+esc(rl[i])+'</td>';
-    for(var j=0;j<cols.length;j++){ var cv=rs['col'+j];
-      if(cols[j].type==='checkbox'){ body+='<td style="border:1px solid #ddd;padding:3px 6px;text-align:center;">'+((Array.isArray(cv)&&cv.length)?'✓':'')+'</td>'; }
-      else { body+='<td style="border:1px solid #ddd;padding:3px 6px;">'+(cv==null||cv===''?'':esc(String(cv)))+'</td>'; } }
-    body+='</tr>'; }
-  var head='<tr><th style="border:1px solid #ddd;padding:3px 6px;background:#f5f5f5;text-align:left;">Bileşen</th>'+
-           cols.map(function(c){return '<th style="border:1px solid #ddd;padding:3px 6px;background:#f5f5f5;text-align:left;">'+esc(c.label)+'</th>';}).join('')+'</tr>';
-  return '<table style="border-collapse:collapse;margin-top:6px;font-size:12px;width:100%;">'+head+body+'</table>';
-}
-function _vkPrintInsp(it){
-  var usage=Array.isArray(it.usage)?it.usage:(it.usage?[it.usage]:[]);
-  function yn(lbl,val){ return '<span style="display:inline-block;margin:0 16px 4px 0;"><b style="color:#555;font-weight:500;">'+lbl+':</b> '+(val==null||val===''?'—':esc(String(val)))+'</span>'; }
-  var h='<div style="border:1px solid #ddd;border-radius:8px;margin:8px 0;overflow:hidden;page-break-inside:avoid;">';
-  h+='<div style="background:#eef7f8;padding:7px 12px;border-bottom:1px solid #ddd;font-weight:700;font-size:13px;">'+esc(it.date||'')+
-     ' <span style="font-weight:400;color:#666;font-size:12px;">· '+esc(it.inspector||'')+(it.partner?(' · '+esc(it.partner)):'')+'</span></div>';
-  h+='<div style="padding:8px 12px;font-size:13px;">';
-  h+=yn('Çalışıyor',it.working)+yn('Koordinat',it.coord)+yn('Tamirat',it.repair)+yn('Sağlık',it.health);
-  if(usage.length) h+='<div style="margin-top:4px;"><b style="color:#555;font-weight:500;">Kullanım:</b> '+esc(usage.join(', '))+'</div>';
-  h+=_vkPrintRating(it.rating);
-  if(it.note) h+='<div style="margin-top:6px;"><b style="color:#555;font-weight:500;">Açıklama:</b> '+esc(String(it.note))+'</div>';
-  h+='</div></div>';
-  return h;
-}
-function _vkPrintHTML(f){
-  var hasc=(f.lat!=null&&f.lat!==''&&f.lon!=null&&f.lon!=='');
-  var coord=hasc?(Number(f.lat).toFixed(6)+', '+Number(f.lon).toFixed(6)):'';
-  var insp=f.inspections||[];
-  var h='<div style="font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;padding:30px 34px;background:#fff;box-sizing:border-box;">';
-  h+='<div style="border-bottom:3px solid #00B9C6;padding-bottom:10px;margin-bottom:16px;">'+
-     '<div style="color:#06838c;font-weight:700;font-size:13px;letter-spacing:1px;">OTTER · VAKIF ESER BİLGİ FORMU</div>'+
-     '<div style="font-size:22px;font-weight:700;margin-top:6px;">'+(vkVal(f.name)||'')+'</div>'+
-     '<div style="font-size:12px;color:#444;margin-top:7px;line-height:1.7;">'+
-       'Su Kuyusu ID: <b>'+(vkVal(f.well_id)||'')+'</b> &nbsp;·&nbsp; Koordinat: <b>'+esc(coord)+'</b><br>'+
-       'Portal Vakıf Eser ID: <b>'+(vkVal(f.portal_id)||'')+'</b> &nbsp;·&nbsp; Çalışma Durumu: <b>'+esc(f.status||'')+'</b>'+
-     '</div></div>';
-  h+='<div style="font-weight:700;color:#06838c;margin:4px 0 4px;font-size:14px;">Vakıf Eser Künyesi</div>';
-  h+='<table style="width:100%;border-collapse:collapse;">'+
-     _vkPF('Ülke',f.country)+_vkPF('Şehir',f.sehir)+_vkPF('Mahalle / Köy',f.mahalle)+
-     _vkPF('Bölge Nüfusu',f.inhabitants)+_vkPF('Bölgedeki Hane Sayısı',f.households)+_vkPF('Faydalanan Kişi Sayısı',f.beneficiaries)+
-     _vkPF('Su Kuyusu Derinliği',f.well_depth?(f.well_depth+' m'):'')+_vkPF('Boru Derinliği',f.pipe_depth?(f.pipe_depth+' m'):'')+
-     _vkPF('Pompa Derinliği',f.pump_depth?(f.pump_depth+' m'):'')+
-     _vkPF('Su Kuyusu Sorumlusu',f.responsible)+_vkPF('Sorumlu İletişim',f.contact)+'</table>';
-  h+='<div style="font-weight:700;color:#06838c;margin:16px 0 4px;font-size:14px;">Denetim Durumu — '+insp.length+' denetim</div>';
-  h+= insp.length ? insp.map(_vkPrintInsp).join('') : '<div style="color:#777;font-size:13px;">Bu kuyu için denetim yanıtı yok.</div>';
-  h+='<div style="margin-top:18px;border-top:1px solid #ddd;padding-top:8px;color:#999;font-size:11px;">OTTER Saha Portalı · '+esc(new Date().toLocaleDateString('tr'))+'</div>';
-  h+='</div>';
-  return h;
-}
+// ── Vakıf Eser PDF (uygulamadaki kart görünümünün AYNISI → html2canvas → jsPDF) + WhatsApp paylaşım ──
 async function vkExportPDF(enc, share){
   var f=vkFind(decodeURIComponent(enc)); if(!f) return;
   if(!window.jspdf || !window.html2canvas){ show('globalMsg','PDF kütüphanesi hazır değil — çevrimiçi bir kez açıp yenileyin.',false); return; }
   show('globalMsg','PDF hazırlanıyor…',true);
-  var holder=document.createElement('div');
-  holder.style.cssText='position:fixed;left:-99999px;top:0;width:794px;background:#fff;z-index:-1;';
-  holder.innerHTML=_vkPrintHTML(f);
-  document.body.appendChild(holder);
+  var sec=document.getElementById('secVakif');
+  var holder=document.createElement('div');   // gerçek kart (butonsuz), #secVakif içinde → vk-* stilleri uygulanır
+  holder.style.cssText='position:fixed;left:-99999px;top:0;width:860px;background:#0d0f14;padding:18px;box-sizing:border-box;z-index:-1;';
+  holder.innerHTML=vkDetailHTML(f, true);
+  sec.appendChild(holder);
   try{
-    var canvas=await html2canvas(holder,{scale:2,backgroundColor:'#ffffff',useCORS:true,windowWidth:794});
-    document.body.removeChild(holder);
+    var canvas=await html2canvas(holder,{scale:2,backgroundColor:'#0d0f14',useCORS:true,windowWidth:900});
+    sec.removeChild(holder);
     var jsPDF=window.jspdf.jsPDF, pdf=new jsPDF('p','mm','a4');
     var pw=210, ph=297, iw=pw, ih=canvas.height*pw/canvas.width;
     var img=canvas.toDataURL('image/jpeg',0.92);
@@ -1537,7 +1482,7 @@ async function vkExportPDF(enc, share){
     a.href=url; a.download=fname; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function(){ URL.revokeObjectURL(url); },5000);
     show('globalMsg', share?'Bu cihaz doküman paylaşımını desteklemiyor — PDF indirildi, WhatsApp\'tan ekleyin.':'PDF indirildi.',true);
-  }catch(e){ try{ document.body.removeChild(holder); }catch(_){ } show('globalMsg','PDF oluşturulamadı: '+e,false); }
+  }catch(e){ try{ sec.removeChild(holder); }catch(_){ } show('globalMsg','PDF oluşturulamadı: '+e,false); }
 }
 // ── Yerel denetim işareti (MOR): saha kullanıcısı form doldurunca kuyu ANINDA mor;
 // sistem onaylayınca (w[9]=last_inspection gelince) turuncuya döner. idb'de kalıcı (çevrimdışı). ──
