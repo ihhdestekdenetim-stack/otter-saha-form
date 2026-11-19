@@ -502,7 +502,7 @@ var I18N = {
   tr:{
     login_sub:'Kullanıcı adı ve şifrenizle giriş yapın', username:'Kullanıcı adı', password:'Şifre',
     sign_in:'Giriş Yap', login_need:'Kullanıcı adı ve şifre gerekli.', login_fail:'Giriş başarısız: kullanıcı adı veya şifre hatalı.',
-    my_account:'Profil', home:'Ana Ekran', net_online:'Çevrimiçi', net_offline:'Çevrimdışı', net_waiting:'bekliyor',
+    my_account:'Profil', home:'Ana Ekran', net_online:'Çevrimiçi', net_offline:'Çevrimdışı', net_waiting:'bekliyor', select_opt:'— seçin —',
     m_resp:'Denetim', m_resp_sub:'Yanıtlar', m_rev:'Fizibilite', m_rev_sub:'Yeni / Revizyon',
     m_map:'GPS', m_map_sub:'Harita', m_vakif:'Vakıf Eser', m_vakif_sub:'Bilgi Kartı', m_report:'Rapor', m_report_sub:'Panel',
     acct_info:'Hesap Bilgileri', display_name:'Görünen Ad', email:'E-posta', created:'Oluşturulma', last_login:'Son Giriş',
@@ -564,7 +564,7 @@ var I18N = {
   en:{
     login_sub:'Sign in with your username and password', username:'Username', password:'Password',
     sign_in:'Sign in', login_need:'Username and password are required.', login_fail:'Login failed: wrong username or password.',
-    my_account:'Profile', home:'Home', net_online:'Online', net_offline:'Offline', net_waiting:'pending',
+    my_account:'Profile', home:'Home', net_online:'Online', net_offline:'Offline', net_waiting:'pending', select_opt:'— select —',
     m_resp:'Inspection', m_resp_sub:'Responses', m_rev:'Feasibility', m_rev_sub:'New / Revision',
     m_map:'GPS', m_map_sub:'Map', m_vakif:'Vakıf Eser', m_vakif_sub:'Info Card', m_report:'Report', m_report_sub:'Dashboard',
     acct_info:'Account Information', display_name:'Display Name', email:'Email', created:'Created', last_login:'Last Sign-in',
@@ -626,7 +626,7 @@ var I18N = {
   fr:{
     login_sub:'Connectez-vous avec votre identifiant et mot de passe', username:'Identifiant', password:'Mot de passe',
     sign_in:'Se connecter', login_need:'Identifiant et mot de passe requis.', login_fail:'Échec de connexion : identifiant ou mot de passe incorrect.',
-    my_account:'Profil', home:'Accueil', net_online:'En ligne', net_offline:'Hors ligne', net_waiting:'en attente',
+    my_account:'Profil', home:'Accueil', net_online:'En ligne', net_offline:'Hors ligne', net_waiting:'en attente', select_opt:'— sélectionner —',
     m_resp:'Inspection', m_resp_sub:'Réponses', m_rev:'Faisabilité', m_rev_sub:'Nouveau / Révision',
     m_map:'GPS', m_map_sub:'Carte', m_vakif:'Vakıf Eser', m_vakif_sub:'Fiche info', m_report:'Rapport', m_report_sub:'Tableau de bord',
     acct_info:'Informations du compte', display_name:'Nom affiché', email:'E-mail', created:'Créé le', last_login:'Dernière connexion',
@@ -688,6 +688,43 @@ var I18N = {
 };
 function t(key){ var d=I18N[LANG]||I18N.tr; return (d&&d[key]!=null)?d[key]:(I18N.tr[key]!=null?I18N.tr[key]:key); }
 function tf(key,vars){ var s=t(key); for(var x in vars){ s=s.split('{'+x+'}').join(vars[x]); } return s; }   // {yer}-tutuculu çeviri
+
+// ── Form içeriği çevirisi (OTTER Denetim Formu) ───────────────
+// VERİ Türkçe KALIR (option value / stored answer); yalnız GÖRÜNEN metin çevrilir.
+// L = soru etiketleri (alan id→metin), O = kategorik cevap/sütun/satır değerleri (TR→çeviri).
+// Özel-isim listeleri (Denetleyen, Partner, Ülke, yıllar) çevrilmez.
+var FORM_I18N = {
+  en:{ L:{
+    fa8xyao3d:'Inspection Date', f6ru2z29v:'Inspection Year', f8tpanh9c:'Inspector', frwvo4bwu:'Country', fuc89zfos:'Partner',
+    fnv07eqsz:'Well ID', fmtnrw629:'Well Opening Year', fp14wy7iq:'Well Name', fmakyvnfa:'Well coordinate information',
+    f9dvh85ba:'Is the well working?', fthhzf5a1:'How long has it not been working?', fgp8ikckt:'Does the well need repair or renovation?',
+    fmz9x9xn1:"Provide a general assessment of the well's condition and yield.", f9r73vzo8:'Specify the intended uses of the water from the well.',
+    fu791jb33:'Is another well needed where this well is located?', falm3m9bj:'Are the well and its surroundings hygienic?',
+    ffd1bs7yq:'Were new photos or videos of the project taken?', f23v12u97:'Description' },
+  O:{
+    'DOĞRU':'Correct','YANLIŞ':'Wrong','BULUNAMADI':'Not found','EVET':'Yes','HAYIR':'No',
+    'İÇME':'Drinking','GÜNLÜK KULLANIM':'Daily use','TARIM':'Agriculture','HAYVANCILIK':'Livestock',
+    '1 - 2 HAFTA':'1–2 weeks','2 - 4 HAFTA':'2–4 weeks','1 - 3 AY':'1–3 months','3 - 6 AY':'3–6 months','6 - 9 AY':'6–9 months','9 - 12  AY':'9–12 months','1+ YIL':'1+ year','2+ YIL':'2+ years','3+ YIL':'3+ years',
+    'İyi':'Good','Açıklama':'Note',
+    'Pompa':'Pump','Su Verimi':'Water yield','Pompa Beton Kalıbı':'Pump concrete base','Su Gideri':'Water drainage','Hayvan Yalağı':'Animal trough','Tabela':'Sign',
+    'Zincir Ayarı Yapılması Gerekiyor':'Chain needs adjustment','Pompa Üst Kısımdan Su Geliyor':'Water leaks from top of pump','Pompa Sabitlenmesi Gerekiyor':'Pump needs securing','Pompa Vidası / Somon Eksik':'Pump screw/bolt missing','Çalışmıyor':'Not working','Su Az Geliyor':'Low water flow','Su Geç Geliyor':'Water comes slowly','Çamurlu Su Geliyor':'Muddy water','Bulanık Su Geliyor':'Cloudy water','Su Kalmamış':'No water left','Pompa Beton Kalıp Kırık':'Pump concrete base broken','Çamur Birikmiş Temizlenmesi Gerekiyor.':'Mud accumulated, needs cleaning.','Tabela Betonu Kırık':'Sign concrete broken','Tabela Köyde Saklanıyor':'Sign kept in the village','Tabela Yazılar Silinmiş':'Sign text faded','Tabela Yok':'No sign','Çatlaklar Var':'There are cracks','Kırıklar Var':'There are breaks','Yok':'None' } },
+  fr:{ L:{
+    fa8xyao3d:'Date d\'inspection', f6ru2z29v:'Année d\'inspection', f8tpanh9c:'Inspecteur', frwvo4bwu:'Pays', fuc89zfos:'Partenaire',
+    fnv07eqsz:'ID du puits', fmtnrw629:'Année d\'ouverture du puits', fp14wy7iq:'Nom du puits', fmakyvnfa:'Coordonnées du puits',
+    f9dvh85ba:'Le puits fonctionne-t-il ?', fthhzf5a1:'Depuis combien de temps ne fonctionne-t-il pas ?', fgp8ikckt:'Le puits a-t-il besoin de réparation ou de rénovation ?',
+    fmz9x9xn1:'Évaluez l\'état général et le rendement du puits.', f9r73vzo8:'Indiquez les usages prévus de l\'eau du puits.',
+    fu791jb33:'Un autre puits est-il nécessaire à cet emplacement ?', falm3m9bj:'Le puits et ses environs sont-ils conformes aux conditions sanitaires ?',
+    ffd1bs7yq:'De nouvelles photos ou vidéos du projet ont-elles été prises ?', f23v12u97:'Description' },
+  O:{
+    'DOĞRU':'Correct','YANLIŞ':'Incorrect','BULUNAMADI':'Introuvable','EVET':'Oui','HAYIR':'Non',
+    'İÇME':'Boisson','GÜNLÜK KULLANIM':'Usage quotidien','TARIM':'Agriculture','HAYVANCILIK':'Élevage',
+    '1 - 2 HAFTA':'1–2 semaines','2 - 4 HAFTA':'2–4 semaines','1 - 3 AY':'1–3 mois','3 - 6 AY':'3–6 mois','6 - 9 AY':'6–9 mois','9 - 12  AY':'9–12 mois','1+ YIL':'1+ an','2+ YIL':'2+ ans','3+ YIL':'3+ ans',
+    'İyi':'Bon','Açıklama':'Remarque',
+    'Pompa':'Pompe','Su Verimi':'Rendement d\'eau','Pompa Beton Kalıbı':'Socle en béton de la pompe','Su Gideri':'Évacuation d\'eau','Hayvan Yalağı':'Abreuvoir','Tabela':'Panneau',
+    'Zincir Ayarı Yapılması Gerekiyor':'La chaîne doit être réglée','Pompa Üst Kısımdan Su Geliyor':'De l\'eau sort du haut de la pompe','Pompa Sabitlenmesi Gerekiyor':'La pompe doit être fixée','Pompa Vidası / Somon Eksik':'Vis / boulon de pompe manquant','Çalışmıyor':'Ne fonctionne pas','Su Az Geliyor':'Faible débit d\'eau','Su Geç Geliyor':'L\'eau arrive lentement','Çamurlu Su Geliyor':'Eau boueuse','Bulanık Su Geliyor':'Eau trouble','Su Kalmamış':'Plus d\'eau','Pompa Beton Kalıp Kırık':'Socle en béton de la pompe cassé','Çamur Birikmiş Temizlenmesi Gerekiyor.':'Boue accumulée, nettoyage nécessaire.','Tabela Betonu Kırık':'Béton du panneau cassé','Tabela Köyde Saklanıyor':'Panneau conservé au village','Tabela Yazılar Silinmiş':'Texte du panneau effacé','Tabela Yok':'Pas de panneau','Çatlaklar Var':'Il y a des fissures','Kırıklar Var':'Il y a des cassures','Yok':'Aucun' } }
+};
+function flabel(f){ var m=FORM_I18N[LANG]; return (m&&m.L[f.id])||f.label; }           // soru etiketi (çeviri yoksa TR)
+function fopt(v){ if(v==null||v==='') return v; var m=FORM_I18N[LANG]; return (m&&m.O[v]!=null)?m.O[v]:v; }   // cevap/sütun/satır değeri gösterimi
 function applyI18n(){
   try{ document.documentElement.lang=LANG; }catch(e){}
   document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
@@ -1100,7 +1137,7 @@ function openResponse(id, prefill){
   var rev = (editingResp && editingResp.status==='revision' && data && data._revise) ? data._revise : null;
   var rbanner=document.getElementById('respReviseNote');
   if(rev){
-    var labels=(rev.fields||[]).map(function(fid){ var f=OTTER_FORM.fields.filter(function(x){return x.id===fid;})[0]; return f?f.label:fid; });
+    var labels=(rev.fields||[]).map(function(fid){ var f=OTTER_FORM.fields.filter(function(x){return x.id===fid;})[0]; return f?flabel(f):fid; });
     rbanner.innerHTML='<b>'+esc(t('revise_req'))+'</b> '+esc(t('revise_only'))+' <b>'+esc(labels.join(', '))+'</b>'+(rev.note?('<br><span style="opacity:.85;">'+esc(t('note_word'))+': '+esc(rev.note)+'</span>'):'');
     rbanner.classList.remove('hide');
   } else { rbanner.classList.add('hide'); }
@@ -1134,20 +1171,20 @@ function renderFields(data, disabled, editable){
 }
 function fieldHTML(f, val, dis){
   var d = dis?' disabled':'';
-  var lab='<label class="fl">'+esc(f.label)+(f.required?' <span class="req">*</span>':'')+'</label>';
+  var lab='<label class="fl">'+esc(flabel(f))+(f.required?' <span class="req">*</span>':'')+'</label>';
   if(f.type==='textarea') return lab+'<textarea data-fid="'+f.id+'"'+d+'>'+esc(val||'')+'</textarea>';
   if(f.type==='date') return lab+'<input type="date" data-fid="'+f.id+'" value="'+esc(val||'')+'"'+d+' onclick="try{this.showPicker()}catch(e){}" onfocus="try{this.showPicker()}catch(e){}" style="cursor:pointer"/>';
   if(f.type==='dropdown'){
-    var opts='<option value="">— seçin —</option>'+f.options.map(function(o){return '<option'+(o===val?' selected':'')+'>'+esc(o)+'</option>';}).join('');
+    var opts='<option value="">'+esc(t('select_opt'))+'</option>'+f.options.map(function(o){return '<option value="'+esc(o)+'"'+(o===val?' selected':'')+'>'+esc(fopt(o))+'</option>';}).join('');
     return lab+'<select data-fid="'+f.id+'"'+d+'>'+opts+'</select>';
   }
   if(f.type==='radio'){
-    var rs=f.options.map(function(o){return '<label><input type="radio" name="'+f.id+'" value="'+esc(o)+'"'+(o===val?' checked':'')+d+'/> '+esc(o)+'</label>';}).join('');
+    var rs=f.options.map(function(o){return '<label><input type="radio" name="'+f.id+'" value="'+esc(o)+'"'+(o===val?' checked':'')+d+'/> '+esc(fopt(o))+'</label>';}).join('');
     return lab+'<div class="opts" data-fid="'+f.id+'" data-kind="radio">'+rs+'</div>';
   }
   if(f.type==='checkbox'){
     var arr=Array.isArray(val)?val:(val?[val]:[]);
-    var cs=f.options.map(function(o){return '<label><input type="checkbox" value="'+esc(o)+'"'+(arr.indexOf(o)>=0?' checked':'')+d+'/> '+esc(o)+'</label>';}).join('');
+    var cs=f.options.map(function(o){return '<label><input type="checkbox" value="'+esc(o)+'"'+(arr.indexOf(o)>=0?' checked':'')+d+'/> '+esc(fopt(o))+'</label>';}).join('');
     return lab+'<div class="opts" data-fid="'+f.id+'" data-kind="checkbox">'+cs+'</div>';
   }
   if(f.type==='datatable'){ return lab+datatableHTML(f, val, dis); }
@@ -1157,18 +1194,18 @@ function datatableHTML(f, val, dis){
   var d=dis?' disabled':'';
   var cols=f.columns||[], rl=f.rowLabels||[], nrows=f.rows||rl.length;
   var saved=(val&&val.rows)?val.rows:[];
-  var head='<tr><th></th>'+cols.map(function(c){return '<th>'+esc(c.label)+'</th>';}).join('')+'</tr>';
+  var head='<tr><th></th>'+cols.map(function(c){return '<th>'+esc(fopt(c.label))+'</th>';}).join('')+'</tr>';
   var body='';
   for(var i=0;i<nrows;i++){
     var rs=saved[i]||{};
-    body+='<tr><td class="dtrow">'+esc(rl[i]||('Satır '+(i+1)))+'</td>';
+    body+='<tr><td class="dtrow">'+esc(fopt(rl[i])||('Satır '+(i+1)))+'</td>';
     for(var j=0;j<cols.length;j++){
       var c=cols[j], cv=rs['col'+j], attr='data-dt="'+f.id+'" data-row="'+i+'" data-col="'+j+'"';
       if(c.type==='checkbox'){
         var ck=(Array.isArray(cv)&&cv.length)?' checked':'';
         body+='<td style="text-align:center"><input type="checkbox" '+attr+' data-lbl="'+esc(c.label)+'"'+ck+d+'/></td>';
       } else {
-        var opts='<option value="">—</option>'+(c.options||[]).map(function(o){return '<option'+(o===cv?' selected':'')+'>'+esc(o)+'</option>';}).join('');
+        var opts='<option value="">—</option>'+(c.options||[]).map(function(o){return '<option value="'+esc(o)+'"'+(o===cv?' selected':'')+'>'+esc(fopt(o))+'</option>';}).join('');
         body+='<td><select '+attr+d+'>'+opts+'</select></td>';
       }
     }
@@ -1733,23 +1770,23 @@ function vkHeroStatus(f){
 }
 function vkYN(v,good){
   var s=String(v==null?'':v).trim(); if(!s) return '';   // boş → boş göster
-  return '<span class="vk-pill '+(s===good?'p-ok':'p-no')+'">'+esc(s)+'</span>';
+  return '<span class="vk-pill '+(s===good?'p-ok':'p-no')+'">'+esc(fopt(s))+'</span>';   // renk TR değere göre, gösterim çevrili
 }
 function vkRatingTable(rating){
   var fld=_vkRatingField(); var rows=(rating&&rating.rows)?rating.rows:null;
   if(!fld||!rows) return '';
   var rl=fld.rowLabels||[], cols=fld.columns||[], body='';
   for(var i=0;i<rl.length;i++){
-    var rs=rows[i]||{}; body+='<tr><td style="font-weight:600">'+esc(rl[i])+'</td>';
+    var rs=rows[i]||{}; body+='<tr><td style="font-weight:600">'+esc(fopt(rl[i]))+'</td>';
     for(var j=0;j<cols.length;j++){
       var cv=rs['col'+j];
       if(cols[j].type==='checkbox'){ var ok=Array.isArray(cv)&&cv.length;
         body+='<td style="text-align:center">'+(ok?'<span style="color:#2ec16b;font-weight:700">✓</span>':'<span style="color:#7a8099">—</span>')+'</td>'; }
-      else { body+='<td>'+((cv==null||cv==='')?'—':esc(String(cv)))+'</td>'; }
+      else { body+='<td>'+((cv==null||cv==='')?'—':esc(fopt(String(cv))))+'</td>'; }
     }
     body+='</tr>';
   }
-  var head='<tr><th>'+esc(t('i_component'))+'</th>'+cols.map(function(c){return '<th>'+esc(c.label)+'</th>';}).join('')+'</tr>';
+  var head='<tr><th>'+esc(t('i_component'))+'</th>'+cols.map(function(c){return '<th>'+esc(fopt(c.label))+'</th>';}).join('')+'</tr>';
   return '<div class="sub-h">'+esc(t('i_rating'))+'</div><div style="overflow-x:auto"><table class="vkt"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
 }
 function vkInspHTML(it, first){
@@ -1765,7 +1802,7 @@ function vkInspHTML(it, first){
      '</div>';
   h+='<div class="vk-g two" style="margin-top:8px;">'+
      '<div class="vk-f"><div class="k">'+esc(t('i_health'))+'</div><div class="v">'+vkYN(it.health,'EVET')+'</div></div>'+
-     '<div class="vk-f"><div class="k">'+esc(t('i_usage'))+'</div><div class="v" style="line-height:1.9">'+(usage.length?usage.map(function(u){return '<span class="vk-chv">'+esc(u)+'</span>';}).join(''):'—')+'</div></div>'+
+     '<div class="vk-f"><div class="k">'+esc(t('i_usage'))+'</div><div class="v" style="line-height:1.9">'+(usage.length?usage.map(function(u){return '<span class="vk-chv">'+esc(fopt(u))+'</span>';}).join(''):'—')+'</div></div>'+
      '</div>';
   h+=vkRatingTable(it.rating);
   if(it.note){ h+='<div class="sub-h">'+esc(t('i_note'))+'</div><div class="vk-memo">'+esc(String(it.note))+'</div>'; }
