@@ -286,8 +286,8 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     <section id="secReport" class="hide">
       <div class="card" style="text-align:center;padding:36px 16px;">
         <div style="font-size:40px;margin-bottom:10px;">📊</div>
-        <b>Rapor Dashboard</b>
-        <div class="muted" style="margin-top:8px;">Bu modül yapım aşamasında. İçerik yakında eklenecek.</div>
+        <b data-i18n="report_title">Rapor Dashboard</b>
+        <div class="muted" data-i18n="report_wip" style="margin-top:8px;">Bu modül yapım aşamasında. İçerik yakında eklenecek.</div>
       </div>
     </section>
 
@@ -295,13 +295,13 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     <section id="secResp" class="hide">
       <div class="row" style="margin-bottom:12px;">
         <div class="muted" id="respCount"></div>
-        <button class="btn" onclick="openResponse(null)">+ Yeni Yanıt</button>
+        <button class="btn" onclick="openResponse(null)" data-i18n="new_response">+ Yeni Yanıt</button>
       </div>
       <div class="chips" id="respFilters" style="margin-bottom:12px;">
-        <button class="chip" data-cat="pending" onclick="toggleFilter(this,'pending')">Onay Bekliyor</button>
-        <button class="chip" data-cat="approved" onclick="toggleFilter(this,'approved')">Onaylandı</button>
-        <button class="chip" data-cat="revision" onclick="toggleFilter(this,'revision')">Revize</button>
-        <button class="chip" data-cat="deleted" onclick="toggleFilter(this,'deleted')">Silindi</button>
+        <button class="chip" data-cat="pending" onclick="toggleFilter(this,'pending')" data-i18n="f_pending">Onay Bekliyor</button>
+        <button class="chip" data-cat="approved" onclick="toggleFilter(this,'approved')" data-i18n="f_approved">Onaylandı</button>
+        <button class="chip" data-cat="revision" onclick="toggleFilter(this,'revision')" data-i18n="f_revision">Revize</button>
+        <button class="chip" data-cat="deleted" onclick="toggleFilter(this,'deleted')" data-i18n="f_deleted">Silindi</button>
       </div>
       <div id="respList"></div>
     </section>
@@ -310,7 +310,7 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     <section id="secRev" class="hide">
       <div class="row" style="margin-bottom:12px;">
         <div class="muted" id="revCount"></div>
-        <button class="btn" onclick="openFeas()">+ Yeni Fizibilite</button>
+        <button class="btn" onclick="openFeas()" data-i18n="new_feas">+ Yeni Fizibilite</button>
       </div>
       <div id="revList"></div>
     </section>
@@ -318,37 +318,37 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     <!-- Yeni Fizibilite formu (canlı GPS) -->
     <section id="feasForm" class="hide">
       <div class="card">
-        <div class="row"><b>Yeni Fizibilite</b>
-          <button class="btn ghost sm" onclick="closeFeas()">← Listeye dön</button></div>
+        <div class="row"><b data-i18n="feas_new">Yeni Fizibilite</b>
+          <button class="btn ghost sm" onclick="closeFeas()" data-i18n="back_to_list">← Listeye dön</button></div>
         <div id="feasLocNote" class="hide" style="background:rgba(224,92,107,.14);border:1px solid var(--err);border-radius:8px;padding:9px 12px;margin:10px 0;color:var(--text);font-size:13px;"></div>
-        <div id="feasGpsBar" class="muted" style="margin:10px 0;font-size:13px;">📍 GPS başlatılıyor…</div>
+        <div id="feasGpsBar" class="muted" data-i18n="fz_gps_start" style="margin:10px 0;font-size:13px;">📍 GPS başlatılıyor…</div>
         <div id="feasWarn" class="hide" style="border:2px solid var(--err);background:rgba(224,92,107,.14);border-radius:8px;padding:10px 12px;margin:10px 0;color:var(--err);font-weight:600;font-size:13px;"></div>
 
-        <label class="fl">Koordinat <span class="muted">(canlı)</span></label>
+        <label class="fl"><span data-i18n="fz_coord">Koordinat</span> <span class="muted" data-i18n="fz_live">(canlı)</span></label>
         <input type="text" id="fzCoord" readonly style="background:var(--card3);"/>
-        <label class="fl">Ülke <span class="muted">(koordinattan otomatik)</span></label>
+        <label class="fl"><span data-i18n="country">Ülke</span> <span class="muted" data-i18n="fz_auto_coord">(koordinattan otomatik)</span></label>
         <input type="text" id="fzCountry"/>
-        <label class="fl">İl / Vilayet <span class="muted">(çevrimiçiyken otomatik)</span></label>
+        <label class="fl"><span data-i18n="fz_city">İl / Vilayet</span> <span class="muted" data-i18n="fz_online_auto">(çevrimiçiyken otomatik)</span></label>
         <input type="text" id="fzCity"/>
-        <label class="fl">İlçe / Bölge</label>
+        <label class="fl" data-i18n="fz_town">İlçe / Bölge</label>
         <input type="text" id="fzTown"/>
-        <label class="fl">Köy</label>
+        <label class="fl" data-i18n="fz_village">Köy</label>
         <input type="text" id="fzVillage"/>
-        <label class="fl">En Yakın Su Kuyusuna Uzaklık <span class="muted">(canlı ölçülür)</span></label>
+        <label class="fl"><span data-i18n="fz_distwell">En Yakın Su Kuyusuna Uzaklık</span> <span class="muted" data-i18n="fz_measured">(canlı ölçülür)</span></label>
         <input type="text" id="fzDistWell" readonly style="background:var(--card3);"/>
-        <label class="fl">Bölge / Köy Nüfusu</label>
+        <label class="fl" data-i18n="fz_pop">Bölge / Köy Nüfusu</label>
         <input type="text" id="fzPopulation" inputmode="numeric"/>
-        <label class="fl">Hane Sayısı</label>
+        <label class="fl" data-i18n="fz_house">Hane Sayısı</label>
         <input type="text" id="fzHouseholds" inputmode="numeric"/>
-        <label class="fl">Faydalanan Kişi Sayısı</label>
+        <label class="fl" data-i18n="fz_benef">Faydalanan Kişi Sayısı</label>
         <input type="text" id="fzBeneficiaries" inputmode="numeric"/>
-        <label class="fl">Arazi Sahipliği</label>
+        <label class="fl" data-i18n="fz_land">Arazi Sahipliği</label>
         <input type="text" id="fzLandOwner"/>
-        <label class="fl">Notlar</label>
+        <label class="fl" data-i18n="fz_notes">Notlar</label>
         <textarea id="fzNotes"></textarea>
         <div id="feasFormMsg" class="msg"></div>
         <div class="actions">
-          <button class="btn ok" id="btnFeasSubmit">Gönder (Fizibilite Kontrolü'ne)</button>
+          <button class="btn ok" id="btnFeasSubmit" data-i18n="fz_submit">Gönder (Fizibilite Kontrolü'ne)</button>
         </div>
       </div>
     </section>
@@ -356,28 +356,28 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     <!-- Koordinat Teyidi (çevrimdışı harita + GPS + mevcut kuyular) -->
     <section id="secMap" class="hide">
       <div class="row" style="margin-bottom:10px;gap:8px;flex-wrap:wrap;">
-        <button class="btn" id="btnLocate">📍 Konumumu Bul</button>
-        <button class="btn ghost" id="btnWellsRefresh" title="Kuyuları buluttan güncelle (çevrimiçiyken)">⟳ Kuyuları Güncelle</button>
+        <button class="btn" id="btnLocate" data-i18n="map_locate">📍 Konumumu Bul</button>
+        <button class="btn ghost" id="btnWellsRefresh" data-i18n="map_refresh_wells">⟳ Kuyuları Güncelle</button>
         <span class="muted" id="wellsInfo"></span>
       </div>
       <div class="mapsearch">
-        <input type="text" id="mapSearch" placeholder="Kuyu ID veya ad ara…" autocapitalize="none"/>
-        <button class="btn" id="btnMapSearch">🔍 Ara</button>
+        <input type="text" id="mapSearch" data-i18n-ph="map_search_ph" placeholder="Kuyu ID veya ad ara…" autocapitalize="none"/>
+        <button class="btn" id="btnMapSearch" data-i18n="map_search_btn">🔍 Ara</button>
       </div>
       <div class="mapfilt">
-        <div class="msel" id="mselCountry"><button type="button" class="msel-btn">Ülke — tümü ▾</button><div class="msel-panel hide"></div></div>
-        <div class="msel" id="mselPartner"><button type="button" class="msel-btn">Partner — tümü ▾</button><div class="msel-panel hide"></div></div>
-        <div class="msel" id="mselYear"><button type="button" class="msel-btn">Tabela yılı — tümü ▾</button><div class="msel-panel hide"></div></div>
-        <select id="mapInsp" title="Denetim durumu"><option value="">Denetim: tümü</option><option value="yes">🟠 Denetlenen</option><option value="no">Denetlenmeyen</option></select>
+        <div class="msel" id="mselCountry"><button type="button" class="msel-btn" data-i18n="map_country_all">Ülke — tümü ▾</button><div class="msel-panel hide"></div></div>
+        <div class="msel" id="mselPartner"><button type="button" class="msel-btn" data-i18n="map_partner_all">Partner — tümü ▾</button><div class="msel-panel hide"></div></div>
+        <div class="msel" id="mselYear"><button type="button" class="msel-btn" data-i18n="map_year_all">Tabela yılı — tümü ▾</button><div class="msel-panel hide"></div></div>
+        <select id="mapInsp" data-i18n-title="map_insp_title" title="Denetim durumu"><option value="" data-i18n="map_insp_all">Denetim: tümü</option><option value="yes" data-i18n="map_insp_yes">🟠 Denetlenen</option><option value="no" data-i18n="map_insp_no">Denetlenmeyen</option></select>
       </div>
       <div class="row" style="margin-bottom:10px;">
         <span class="muted" id="mapFiltInfo"></span>
-        <button class="btn ghost sm hide" id="grpBack">← Tüm Ülkeler</button>
-        <button class="btn ghost sm" id="btnMapFiltClear">Filtreyi Temizle</button>
+        <button class="btn ghost sm hide" id="grpBack" data-i18n="all_countries">← Tüm Ülkeler</button>
+        <button class="btn ghost sm" id="btnMapFiltClear" data-i18n="map_filt_clear">Filtreyi Temizle</button>
       </div>
       <div id="map" style="height:62vh;min-height:360px;border:1px solid var(--border);border-radius:12px;background:#0a0c10;"></div>
       <div id="nearList" style="margin-top:12px;"></div>
-      <div class="muted" style="margin-top:8px;font-size:12px;">Not: Harita karoları çevrimdışı çalışsın diye o bölgeyi bir kez çevrimiçiyken görüntüleyin. GPS internet gerektirmez.</div>
+      <div class="muted" data-i18n="map_offline_note" style="margin-top:8px;font-size:12px;">Not: Harita karoları çevrimdışı çalışsın diye o bölgeyi bir kez çevrimiçiyken görüntüleyin. GPS internet gerektirmez.</div>
     </section>
 
     <!-- Hesabım -->
@@ -442,8 +442,8 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     <!-- Kuyu görsel modalı -->
     <div id="imgOverlay" style="position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:16px;" onclick="closeWellImage(event)">
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;max-width:92vw;max-height:88vh;overflow:auto;padding:14px;" onclick="event.stopPropagation()">
-        <div class="row" style="margin-bottom:8px;"><b id="imgTitle">Su Kuyusu Görseli</b>
-          <button class="btn ghost sm" onclick="closeWellImage()">Kapat ✕</button></div>
+        <div class="row" style="margin-bottom:8px;"><b id="imgTitle" data-i18n="img_title">Su Kuyusu Görseli</b>
+          <button class="btn ghost sm" onclick="closeWellImage()" data-i18n="img_close">Kapat ✕</button></div>
         <div id="imgBody" style="text-align:center;"></div>
       </div>
     </div>
@@ -451,16 +451,16 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     <!-- Form paneli (yanıt doldur/düzenle) -->
     <section id="respForm" class="hide">
       <div class="card">
-        <div class="row"><b id="respFormTitle">Yeni Yanıt</b>
-          <button class="btn ghost sm" onclick="closeResponse()">← Listeye dön</button></div>
-        <div id="respLockNote" class="locknote hide">Bu yanıt onaylandı; artık düzenlenemez.</div>
+        <div class="row"><b id="respFormTitle" data-i18n="resp_new">Yeni Yanıt</b>
+          <button class="btn ghost sm" onclick="closeResponse()" data-i18n="back_to_list">← Listeye dön</button></div>
+        <div id="respLockNote" class="locknote hide" data-i18n="resp_locked_note">Bu yanıt onaylandı; artık düzenlenemez.</div>
         <div id="respReviseNote" class="hide" style="background:rgba(224,160,107,.14);border:1px solid var(--warn);border-radius:8px;padding:10px 12px;margin-bottom:10px;color:var(--text);font-size:13px;"></div>
         <div id="respLocNote" class="hide" style="background:rgba(224,92,107,.14);border:1px solid var(--err);border-radius:8px;padding:9px 12px;margin-bottom:10px;color:var(--text);font-size:13px;"></div>
         <div id="fields"></div>
         <div id="respFormMsg" class="msg"></div>
         <div class="actions" id="respFormActions">
-          <button class="btn ghost" id="btnSaveDraft">Taslak Kaydet</button>
-          <button class="btn ok" id="btnSubmit">Gönder (onaya)</button>
+          <button class="btn ghost" id="btnSaveDraft" data-i18n="save_draft">Taslak Kaydet</button>
+          <button class="btn ok" id="btnSubmit" data-i18n="submit_approval">Gönder (onaya)</button>
         </div>
       </div>
     </section>
@@ -468,12 +468,12 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     <!-- Revizyon paneli -->
     <section id="revForm" class="hide">
       <div class="card">
-        <div class="row"><b id="revFormTitle">Revizyon</b>
-          <button class="btn ghost sm" onclick="closeRevision()">← Listeye dön</button></div>
+        <div class="row"><b id="revFormTitle" data-i18n="rev_title">Revizyon</b>
+          <button class="btn ghost sm" onclick="closeRevision()" data-i18n="back_to_list">← Listeye dön</button></div>
         <div class="muted" id="revNote" style="margin:8px 0;"></div>
         <div id="revFields"></div>
         <div id="revFormMsg" class="msg"></div>
-        <div class="actions"><button class="btn ok" id="btnRevSave">Revizeyi Gönder</button></div>
+        <div class="actions"><button class="btn ok" id="btnRevSave" data-i18n="rev_submit">Revizeyi Gönder</button></div>
       </div>
     </section>
   </div>
@@ -515,6 +515,38 @@ var I18N = {
     vk_search_ph:'Kuyu adı / ID ara…', vk_wells_count:'kuyu (güncel)', vk_wells:'kuyu', vk_no_wells:'Kuyu yok.',
     vk_cached:'(önbellek)', vk_current:'(güncel)', vk_no_data:'Veri yok — çevrimiçiyken "⟳ Güncelle".', vk_match:'eşleşme', vk_no_match:'Eşleşen kuyu yok: ', vk_unnamed:'(İsimsiz)',
     st_working:'Çalışıyor', st_broken:'Çalışmıyor', st_uninspected:'Denetlenmedi',
+    report_title:'Rapor Dashboard', report_wip:'Bu modül yapım aşamasında. İçerik yakında eklenecek.',
+    new_response:'+ Yeni Yanıt', f_pending:'Onay Bekliyor', f_approved:'Onaylandı', f_revision:'Revize', f_deleted:'Silindi',
+    new_feas:'+ Yeni Fizibilite', back_to_list:'← Listeye dön', feas_new:'Yeni Fizibilite',
+    fz_coord:'Koordinat', fz_live:'(canlı)', fz_auto_coord:'(koordinattan otomatik)', fz_city:'İl / Vilayet', fz_online_auto:'(çevrimiçiyken otomatik)',
+    fz_town:'İlçe / Bölge', fz_village:'Köy', fz_distwell:'En Yakın Su Kuyusuna Uzaklık', fz_measured:'(canlı ölçülür)',
+    fz_pop:'Bölge / Köy Nüfusu', fz_house:'Hane Sayısı', fz_benef:'Faydalanan Kişi Sayısı', fz_land:'Arazi Sahipliği', fz_notes:'Notlar',
+    fz_submit:'Gönder (Fizibilite Kontrolü\'ne)', fz_gps_start:'📍 GPS başlatılıyor…',
+    map_locate:'📍 Konumumu Bul', map_refresh_wells:'⟳ Kuyuları Güncelle', map_search_ph:'Kuyu ID veya ad ara…', map_search_btn:'🔍 Ara',
+    map_country_all:'Ülke — tümü ▾', map_partner_all:'Partner — tümü ▾', map_year_all:'Tabela yılı — tümü ▾',
+    map_insp_title:'Denetim durumu', map_insp_all:'Denetim: tümü', map_insp_yes:'🟠 Denetlenen', map_insp_no:'Denetlenmeyen',
+    map_filt_clear:'Filtreyi Temizle', map_offline_note:'Not: Harita karoları çevrimdışı çalışsın diye o bölgeyi bir kez çevrimiçiyken görüntüleyin. GPS internet gerektirmez.',
+    img_title:'Su Kuyusu Görseli', img_close:'Kapat ✕',
+    resp_new:'Yeni Yanıt', resp_locked_note:'Bu yanıt onaylandı; artık düzenlenemez.', save_draft:'Taslak Kaydet', submit_approval:'Gönder (onaya)',
+    rev_title:'Revizyon', rev_submit:'Revizeyi Gönder',
+    rp_deleted:'Silindi', rp_revision:'Revize', rp_locked:'Onaylandı (kilitli)', rp_submitted:'Onay bekliyor', rp_draft:'Taslak',
+    resp_count_word:'yanıt', resp_empty:'Henüz yanıt yok. "+ Yeni Yanıt" ile ekleyin.', resp_empty_filter:'Seçili filtrede yanıt yok.',
+    btn_view:'Görüntüle', btn_edit:'Düzenle', id_none:'(ID yok)',
+    rev_count_word:'atama', rev_empty:'Size atanan revizyon yok.', rev_sent:'Gönderildi', rev_pending:'Bekliyor', btn_revise:'Revize Et', btn_view_edit:'Görüntüle/Düzenle',
+    msg_saved_offline:'Çevrimdışı kaydedildi — internet gelince gönderilecek.', msg_submitted:'Gönderildi, admin onayına düştü.', msg_draft_saved:'Taslak kaydedildi.', msg_save_fail:'Kaydedilemedi: ',
+    loc_checking:'📍 Konum kontrol ediliyor…', loc_denied:'Konum izni KAPALI — lütfen cihaz/tarayıcı konumunu açın (doğru konum için gerekli).', loc_unavail:'Konum alınamıyor — cihaz konumunu (GPS) açın.',
+    feas_submitted:'Gönderildi — Fizibilite Kontrolü\'ne düşecek.', feas_need_loc:'Konum alınamadı — GPS açık mı? Koordinat zorunlu.', well_no_data:'(kuyu verisi yok)',
+    dl_pick_country:'— ülke seçin —', dl_loading:'— yükleniyor —', dl_no_well_data:'— kuyu verisi yok —',
+    resp_title_num:'Yanıt #', resp_deleted_note:'Bu yanıt OTTER tarafında silindi; artık düzenlenemez.', revise_req:'Revize isteniyor.', revise_only:'Yalnız şu alanları düzeltip tekrar "Gönder":', note_word:'Not',
+    rev_fields_label:'Alanlar', send_fail:'Gönderilemedi: ', msg_saved_offline_locked:'Çevrimdışı kaydedildi — internet gelince gönderilecek. Form kilitlendi.', rev_submitted_locked:'Revize gönderildi ve kilitlendi; artık düzenlenemez.',
+    fz_no_gps:'📍 Cihaz GPS desteklemiyor.', fz_loc_fail:'📍 Konum alınamıyor: {e} — cihaz konumunu açın.', fz_live_loc:'📍 Canlı konum: {c} (±{a} m)',
+    fz_warn:'⚠ UYARI: En yakın su kuyusu yalnız {m} m uzakta (400 m’den yakın). Bu konum uygun olmayabilir.', fz_confirm:'En yakın su kuyusu yalnız {m} m uzakta (400 m’den yakın). Yine de onaylıyor musunuz?', fz_well:'Kuyu',
+    loc_no_gps:'Cihaz konum (GPS) desteklemiyor — konum doğrulaması yapılamayacak.',
+    dl_wells_loading:'Kuyular yükleniyor…', dl_wells_fail_online:'Kuyular yüklenemedi. "⟳ Kuyuları Yükle" ile tekrar deneyin.', dl_wells_fail_offline:'Çevrimdışısınız. İnternete bağlanıp "⟳ Kuyuları Yükle" deneyin.', dl_wells_countries:'{w} kuyu · {c} ülke yüklendi',
+    wells_no_data:'Kuyu verisi yok — çevrimiçiyken "Kuyuları Güncelle".', near_empty:'Yakında kuyu yok.', confirm_btn:'Teyit Et', updating:'Güncelleniyor…', wells_updated:'Kuyular güncellendi.', wells_update_fail:'Güncellenemedi (çevrimdışı).',
+    loc_first:'Önce konumunu bul.', confirm_note_prompt:'"{w}" kuyusu için teyit notu (opsiyonel):', confirm_saved_offline:'Teyit çevrimdışı kaydedildi — internet gelince gönderilecek.', confirm_saved:'Teyit kaydedildi ({w}).', loc_header:'Konum: {c} (±{a} m)',
+    all_word:'tümü', no_options:'Seçenek yok', partner_word:'Partner', year_word:'Tabela yılı', search_showing:'{n} eşleşme — "{w}" gösteriliyor.',
+    pop_last_insp:'Son Denetim', pop_local_filled:'Yerel dolduruldu (senkron bekliyor)', pop_image:'Görsel', img_loading:'Görseller yükleniyor…', img_fetch_fail:'Görseller alınamadı.', img_offline_none:'Çevrimdışısınız — bu kuyunun görselleri önceden indirilmemiş.', img_none:'Bu kuyunun görseli henüz eklenmedi.',
     offline_list:'Çevrimdışı — son kaydedilen liste gösteriliyor.',
     k_wellid:'Su Kuyusu ID', k_coord:'Koordinat', k_portalid:'Portal Vakıf Eser ID',
     vk_kunye:'Vakıf Eser Künyesi', k_country:'Ülke', k_city:'Şehir', k_village:'Mahalle / Köy',
@@ -545,6 +577,38 @@ var I18N = {
     vk_search_ph:'Search well name / ID…', vk_wells_count:'wells (current)', vk_wells:'wells', vk_no_wells:'No wells.',
     vk_cached:'(cached)', vk_current:'(current)', vk_no_data:'No data — press "⟳ Refresh" while online.', vk_match:'matches', vk_no_match:'No matching well: ', vk_unnamed:'(Unnamed)',
     st_working:'Working', st_broken:'Not working', st_uninspected:'Not inspected',
+    report_title:'Report Dashboard', report_wip:'This module is under construction. Content coming soon.',
+    new_response:'+ New Response', f_pending:'Pending Approval', f_approved:'Approved', f_revision:'Revision', f_deleted:'Deleted',
+    new_feas:'+ New Feasibility', back_to_list:'← Back to list', feas_new:'New Feasibility',
+    fz_coord:'Coordinate', fz_live:'(live)', fz_auto_coord:'(auto from coordinates)', fz_city:'Province', fz_online_auto:'(auto when online)',
+    fz_town:'District / Region', fz_village:'Village', fz_distwell:'Distance to Nearest Well', fz_measured:'(measured live)',
+    fz_pop:'Area / Village Population', fz_house:'Households', fz_benef:'Number of Beneficiaries', fz_land:'Land Ownership', fz_notes:'Notes',
+    fz_submit:'Submit (to Feasibility Check)', fz_gps_start:'📍 Starting GPS…',
+    map_locate:'📍 Find My Location', map_refresh_wells:'⟳ Refresh Wells', map_search_ph:'Search well ID or name…', map_search_btn:'🔍 Search',
+    map_country_all:'Country — all ▾', map_partner_all:'Partner — all ▾', map_year_all:'Sign year — all ▾',
+    map_insp_title:'Inspection status', map_insp_all:'Inspection: all', map_insp_yes:'🟠 Inspected', map_insp_no:'Not inspected',
+    map_filt_clear:'Clear Filter', map_offline_note:'Note: to use map tiles offline, view that area once while online. GPS does not require internet.',
+    img_title:'Well Image', img_close:'Close ✕',
+    resp_new:'New Response', resp_locked_note:'This response is approved; it can no longer be edited.', save_draft:'Save Draft', submit_approval:'Submit (for approval)',
+    rev_title:'Revision', rev_submit:'Submit Revision',
+    rp_deleted:'Deleted', rp_revision:'Revision', rp_locked:'Approved (locked)', rp_submitted:'Pending approval', rp_draft:'Draft',
+    resp_count_word:'responses', resp_empty:'No responses yet. Add one with "+ New Response".', resp_empty_filter:'No responses in the selected filter.',
+    btn_view:'View', btn_edit:'Edit', id_none:'(no ID)',
+    rev_count_word:'assignments', rev_empty:'No revisions assigned to you.', rev_sent:'Sent', rev_pending:'Pending', btn_revise:'Revise', btn_view_edit:'View/Edit',
+    msg_saved_offline:'Saved offline — will be sent when internet returns.', msg_submitted:'Sent, awaiting admin approval.', msg_draft_saved:'Draft saved.', msg_save_fail:'Could not save: ',
+    loc_checking:'📍 Checking location…', loc_denied:'Location permission is OFF — please enable device/browser location (required for accurate position).', loc_unavail:'Cannot get location — enable device location (GPS).',
+    feas_submitted:'Sent — will go to the Feasibility Check.', feas_need_loc:'Location unavailable — is GPS on? Coordinate is required.', well_no_data:'(no well data)',
+    dl_pick_country:'— select country —', dl_loading:'— loading —', dl_no_well_data:'— no well data —',
+    resp_title_num:'Response #', resp_deleted_note:'This response was deleted on the OTTER side; it can no longer be edited.', revise_req:'Revision requested.', revise_only:'Fix only these fields and "Submit" again:', note_word:'Note',
+    rev_fields_label:'Fields', send_fail:'Could not send: ', msg_saved_offline_locked:'Saved offline — will be sent when internet returns. Form locked.', rev_submitted_locked:'Revision sent and locked; it can no longer be edited.',
+    fz_no_gps:'📍 Device does not support GPS.', fz_loc_fail:'📍 Cannot get location: {e} — enable device location.', fz_live_loc:'📍 Live location: {c} (±{a} m)',
+    fz_warn:'⚠ WARNING: The nearest well is only {m} m away (closer than 400 m). This location may not be suitable.', fz_confirm:'The nearest well is only {m} m away (closer than 400 m). Do you still confirm?', fz_well:'Well',
+    loc_no_gps:'Device does not support location (GPS) — location verification unavailable.',
+    dl_wells_loading:'Loading wells…', dl_wells_fail_online:'Could not load wells. Try again with "⟳ Load Wells".', dl_wells_fail_offline:'You are offline. Connect to the internet and try "⟳ Load Wells".', dl_wells_countries:'{w} wells · {c} countries loaded',
+    wells_no_data:'No well data — press "Refresh Wells" while online.', near_empty:'No wells nearby.', confirm_btn:'Confirm', updating:'Updating…', wells_updated:'Wells updated.', wells_update_fail:'Update failed (offline).',
+    loc_first:'Find your location first.', confirm_note_prompt:'Confirmation note for well "{w}" (optional):', confirm_saved_offline:'Confirmation saved offline — will be sent when internet returns.', confirm_saved:'Confirmation saved ({w}).', loc_header:'Location: {c} (±{a} m)',
+    all_word:'all', no_options:'No options', partner_word:'Partner', year_word:'Sign year', search_showing:'{n} matches — showing "{w}".',
+    pop_last_insp:'Last Inspection', pop_local_filled:'Filled locally (awaiting sync)', pop_image:'Image', img_loading:'Loading images…', img_fetch_fail:'Could not fetch images.', img_offline_none:'You are offline — this well\'s images were not pre-downloaded.', img_none:'No image has been added for this well yet.',
     offline_list:'Offline — showing the last saved list.',
     k_wellid:'Well ID', k_coord:'Coordinates', k_portalid:'Portal Vakıf Eser ID',
     vk_kunye:'Foundation Record', k_country:'Country', k_city:'City', k_village:'District / Village',
@@ -575,6 +639,38 @@ var I18N = {
     vk_search_ph:'Rechercher nom / ID du puits…', vk_wells_count:'puits (à jour)', vk_wells:'puits', vk_no_wells:'Aucun puits.',
     vk_cached:'(cache)', vk_current:'(à jour)', vk_no_data:'Aucune donnée — appuyez sur « ⟳ Actualiser » en ligne.', vk_match:'correspondance(s)', vk_no_match:'Aucun puits correspondant : ', vk_unnamed:'(Sans nom)',
     st_working:'Fonctionne', st_broken:'Hors service', st_uninspected:'Non inspecté',
+    report_title:'Tableau de bord', report_wip:'Ce module est en construction. Contenu bientôt disponible.',
+    new_response:'+ Nouvelle réponse', f_pending:'En attente d\'approbation', f_approved:'Approuvé', f_revision:'Révision', f_deleted:'Supprimé',
+    new_feas:'+ Nouvelle faisabilité', back_to_list:'← Retour à la liste', feas_new:'Nouvelle faisabilité',
+    fz_coord:'Coordonnée', fz_live:'(en direct)', fz_auto_coord:'(auto depuis les coordonnées)', fz_city:'Province', fz_online_auto:'(auto en ligne)',
+    fz_town:'District / Région', fz_village:'Village', fz_distwell:'Distance au puits le plus proche', fz_measured:'(mesuré en direct)',
+    fz_pop:'Population zone / village', fz_house:'Ménages', fz_benef:'Nombre de bénéficiaires', fz_land:'Propriété du terrain', fz_notes:'Notes',
+    fz_submit:'Envoyer (au contrôle de faisabilité)', fz_gps_start:'📍 Démarrage du GPS…',
+    map_locate:'📍 Me localiser', map_refresh_wells:'⟳ Actualiser les puits', map_search_ph:'Rechercher ID ou nom du puits…', map_search_btn:'🔍 Rechercher',
+    map_country_all:'Pays — tous ▾', map_partner_all:'Partenaire — tous ▾', map_year_all:'Année — toutes ▾',
+    map_insp_title:'État d\'inspection', map_insp_all:'Inspection : toutes', map_insp_yes:'🟠 Inspecté', map_insp_no:'Non inspecté',
+    map_filt_clear:'Effacer le filtre', map_offline_note:'Note : pour utiliser les tuiles hors ligne, affichez la zone une fois en ligne. Le GPS ne nécessite pas internet.',
+    img_title:'Image du puits', img_close:'Fermer ✕',
+    resp_new:'Nouvelle réponse', resp_locked_note:'Cette réponse est approuvée ; elle ne peut plus être modifiée.', save_draft:'Enregistrer le brouillon', submit_approval:'Envoyer (pour approbation)',
+    rev_title:'Révision', rev_submit:'Envoyer la révision',
+    rp_deleted:'Supprimé', rp_revision:'Révision', rp_locked:'Approuvé (verrouillé)', rp_submitted:'En attente d\'approbation', rp_draft:'Brouillon',
+    resp_count_word:'réponses', resp_empty:'Aucune réponse pour l\'instant. Ajoutez-en une avec « + Nouvelle réponse ».', resp_empty_filter:'Aucune réponse dans le filtre sélectionné.',
+    btn_view:'Afficher', btn_edit:'Modifier', id_none:'(aucun ID)',
+    rev_count_word:'affectations', rev_empty:'Aucune révision ne vous est affectée.', rev_sent:'Envoyé', rev_pending:'En attente', btn_revise:'Réviser', btn_view_edit:'Afficher/Modifier',
+    msg_saved_offline:'Enregistré hors ligne — sera envoyé au retour d\'internet.', msg_submitted:'Envoyé, en attente d\'approbation de l\'admin.', msg_draft_saved:'Brouillon enregistré.', msg_save_fail:'Enregistrement impossible : ',
+    loc_checking:'📍 Vérification de la position…', loc_denied:'Autorisation de localisation DÉSACTIVÉE — veuillez activer la localisation de l\'appareil/navigateur (nécessaire pour une position précise).', loc_unavail:'Localisation impossible — activez la localisation (GPS) de l\'appareil.',
+    feas_submitted:'Envoyé — ira au contrôle de faisabilité.', feas_need_loc:'Position indisponible — le GPS est-il activé ? La coordonnée est requise.', well_no_data:'(aucune donnée de puits)',
+    dl_pick_country:'— sélectionner un pays —', dl_loading:'— chargement —', dl_no_well_data:'— aucune donnée de puits —',
+    resp_title_num:'Réponse #', resp_deleted_note:'Cette réponse a été supprimée côté OTTER ; elle ne peut plus être modifiée.', revise_req:'Révision demandée.', revise_only:'Corrigez uniquement ces champs puis « Envoyer » :', note_word:'Note',
+    rev_fields_label:'Champs', send_fail:'Envoi impossible : ', msg_saved_offline_locked:'Enregistré hors ligne — sera envoyé au retour d\'internet. Formulaire verrouillé.', rev_submitted_locked:'Révision envoyée et verrouillée ; elle ne peut plus être modifiée.',
+    fz_no_gps:'📍 L\'appareil ne prend pas en charge le GPS.', fz_loc_fail:'📍 Localisation impossible : {e} — activez la localisation de l\'appareil.', fz_live_loc:'📍 Position en direct : {c} (±{a} m)',
+    fz_warn:'⚠ ATTENTION : le puits le plus proche n\'est qu\'à {m} m (moins de 400 m). Cet emplacement peut ne pas convenir.', fz_confirm:'Le puits le plus proche n\'est qu\'à {m} m (moins de 400 m). Confirmez-vous quand même ?', fz_well:'Puits',
+    loc_no_gps:'L\'appareil ne prend pas en charge la localisation (GPS) — vérification de position indisponible.',
+    dl_wells_loading:'Chargement des puits…', dl_wells_fail_online:'Impossible de charger les puits. Réessayez avec « ⟳ Charger les puits ».', dl_wells_fail_offline:'Vous êtes hors ligne. Connectez-vous à internet et essayez « ⟳ Charger les puits ».', dl_wells_countries:'{w} puits · {c} pays chargés',
+    wells_no_data:'Aucune donnée de puits — appuyez sur « Actualiser les puits » en ligne.', near_empty:'Aucun puits à proximité.', confirm_btn:'Confirmer', updating:'Mise à jour…', wells_updated:'Puits mis à jour.', wells_update_fail:'Échec de la mise à jour (hors ligne).',
+    loc_first:'Localisez-vous d\'abord.', confirm_note_prompt:'Note de confirmation pour le puits « {w} » (facultatif) :', confirm_saved_offline:'Confirmation enregistrée hors ligne — sera envoyée au retour d\'internet.', confirm_saved:'Confirmation enregistrée ({w}).', loc_header:'Position : {c} (±{a} m)',
+    all_word:'tous', no_options:'Aucune option', partner_word:'Partenaire', year_word:'Année', search_showing:'{n} correspondance(s) — affichage de « {w} ».',
+    pop_last_insp:'Dernière inspection', pop_local_filled:'Rempli localement (synchronisation en attente)', pop_image:'Image', img_loading:'Chargement des images…', img_fetch_fail:'Impossible de récupérer les images.', img_offline_none:'Vous êtes hors ligne — les images de ce puits n\'ont pas été téléchargées à l\'avance.', img_none:'Aucune image n\'a encore été ajoutée pour ce puits.',
     offline_list:'Hors ligne — affichage de la dernière liste enregistrée.',
     k_wellid:'ID du puits', k_coord:'Coordonnées', k_portalid:'ID Vakıf Eser du portail',
     vk_kunye:'Fiche de la fondation', k_country:'Pays', k_city:'Ville', k_village:'Quartier / Village',
@@ -589,6 +685,7 @@ var I18N = {
   }
 };
 function t(key){ var d=I18N[LANG]||I18N.tr; return (d&&d[key]!=null)?d[key]:(I18N.tr[key]!=null?I18N.tr[key]:key); }
+function tf(key,vars){ var s=t(key); for(var x in vars){ s=s.split('{'+x+'}').join(vars[x]); } return s; }   // {yer}-tutuculu çeviri
 function applyI18n(){
   try{ document.documentElement.lang=LANG; }catch(e){}
   document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
@@ -720,22 +817,21 @@ async function populateDlCountries(force){
   var info=document.getElementById('dlWellsInfo');
   // 1) Önbellek/mevcut; boşsa veya force ise çevrimiçi dene
   if(force || !WELLS.length){
-    sel.innerHTML='<option value="">— kuyu verisi yükleniyor… —</option>';
-    if(info) info.textContent='Kuyular yükleniyor…';
+    sel.innerHTML='<option value="">'+esc(t('dl_loading'))+'</option>';
+    if(info) info.textContent=t('dl_wells_loading');
     try{ await loadWells(force?true:false); }catch(e){}
     // Hâlâ boş ve çevrimiçiysek zorla çek (ilk kez bu cihazda)
     if(!WELLS.length && navigator.onLine){ try{ await loadWells(true); }catch(e){} }
   }
   if(!WELLS.length){
-    sel.innerHTML='<option value="">— kuyu verisi yok —</option>';
-    if(info) info.textContent=navigator.onLine ? 'Kuyular yüklenemedi. "⟳ Kuyuları Yükle" ile tekrar deneyin.'
-                                               : 'Çevrimdışısınız. İnternete bağlanıp "⟳ Kuyuları Yükle" deneyin.';
+    sel.innerHTML='<option value="">'+esc(t('dl_no_well_data'))+'</option>';
+    if(info) info.textContent=navigator.onLine ? t('dl_wells_fail_online') : t('dl_wells_fail_offline');
     updateDlEstimate(); return;
   }
   var counts={}; WELLS.forEach(function(w){ var c=w[4]||''; if(c) counts[c]=(counts[c]||0)+1; });
   var names=Object.keys(counts).sort(function(a,b){return a.localeCompare(b,'tr');});
-  sel.innerHTML='<option value="">— ülke seçin —</option>'+names.map(function(c){ return '<option value="'+esc(c)+'">'+esc(c)+' ('+counts[c]+' kuyu)</option>'; }).join('');
-  if(info) info.textContent=WELLS.length+' kuyu · '+names.length+' ülke yüklendi';
+  sel.innerHTML='<option value="">'+esc(t('dl_pick_country'))+'</option>'+names.map(function(c){ return '<option value="'+esc(c)+'">'+esc(c)+' ('+counts[c]+' '+esc(t('vk_wells'))+')</option>'; }).join('');
+  if(info) info.textContent=tf('dl_wells_countries',{w:WELLS.length, c:names.length});
   updateDlEstimate();
 }
 function updateDlEstimate(){
@@ -924,15 +1020,15 @@ async function loadResponses(){
   }catch(e){
     try{ RESP=JSON.parse(localStorage.getItem('otter_resp_cache')||'[]')||[]; }catch(_){ RESP=[]; }
     renderResponses();
-    if(!navigator.onLine) show('globalMsg','Çevrimdışı — son kaydedilen liste gösteriliyor.',true);
+    if(!navigator.onLine) show('globalMsg',t('offline_list'),true);
   }
 }
 function statusPill(r){
-  if(r.status==='deleted') return '<span class="pill deleted">Silindi</span>';
-  if(r.status==='revision') return '<span class="pill revize">Revize</span>';
-  if(r.locked) return '<span class="pill locked">Onaylandı (kilitli)</span>';
-  if(r.status==='submitted') return '<span class="pill submitted">Onay bekliyor</span>';
-  return '<span class="pill draft">Taslak</span>';
+  if(r.status==='deleted') return '<span class="pill deleted">'+esc(t('rp_deleted'))+'</span>';
+  if(r.status==='revision') return '<span class="pill revize">'+esc(t('rp_revision'))+'</span>';
+  if(r.locked) return '<span class="pill locked">'+esc(t('rp_locked'))+'</span>';
+  if(r.status==='submitted') return '<span class="pill submitted">'+esc(t('rp_submitted'))+'</span>';
+  return '<span class="pill draft">'+esc(t('rp_draft'))+'</span>';
 }
 var RESP_FILTER = {};                                      // seçili kategoriler (çoklu)
 function respCategory(r){
@@ -950,16 +1046,16 @@ function toggleFilter(btn, cat){
 function renderResponses(){
   var active=Object.keys(RESP_FILTER);
   var list=active.length ? RESP.filter(function(r){ return RESP_FILTER[respCategory(r)]; }) : RESP;
-  document.getElementById('respCount').textContent=active.length ? (list.length+' / '+RESP.length+' yanıt') : (RESP.length+' yanıt');
+  document.getElementById('respCount').textContent=active.length ? (list.length+' / '+RESP.length+' '+t('resp_count_word')) : (RESP.length+' '+t('resp_count_word'));
   var el=document.getElementById('respList');
-  if(!RESP.length){ el.innerHTML='<div class="muted">Henüz yanıt yok. "+ Yeni Yanıt" ile ekleyin.</div>'; return; }
-  if(!list.length){ el.innerHTML='<div class="muted">Seçili filtrede yanıt yok.</div>'; return; }
+  if(!RESP.length){ el.innerHTML='<div class="muted">'+esc(t('resp_empty'))+'</div>'; return; }
+  if(!list.length){ el.innerHTML='<div class="muted">'+esc(t('resp_empty_filter'))+'</div>'; return; }
   el.innerHTML=list.map(function(r){
-    var id=firstVal(r.data,['fnv07eqsz'])||'(ID yok)';
+    var id=firstVal(r.data,['fnv07eqsz'])||t('id_none');
     var when=(r.created_at||'').slice(0,10);
-    return '<div class="card"><div class="row"><div><b>Su Kuyusu ID: '+esc(id)+'</b><div class="muted">'+esc(when)+'</div></div>'+
+    return '<div class="card"><div class="row"><div><b>'+esc(t('k_wellid'))+': '+esc(id)+'</b><div class="muted">'+esc(when)+'</div></div>'+
       '<div class="row" style="gap:8px;">'+statusPill(r)+
-      '<button class="btn ghost sm" onclick="openResponse('+r.id+')">'+((r.locked||r.status==='deleted')?'Görüntüle':'Düzenle')+'</button></div></div></div>';
+      '<button class="btn ghost sm" onclick="openResponse('+r.id+')">'+((r.locked||r.status==='deleted')?esc(t('btn_view')):esc(t('btn_edit')))+'</button></div></div></div>';
   }).join('');
 }
 function firstVal(data,keys){ if(!data) return ''; for(var i=0;i<keys.length;i++){ if(data[keys[i]]!=null&&data[keys[i]]!=='') return data[keys[i]]; } return ''; }
@@ -992,10 +1088,9 @@ function openResponse(id, prefill){
   editingResp = (id==null)?null:RESP.filter(function(x){return x.id===id;})[0];
   var isDeleted = editingResp && editingResp.status==='deleted';
   var locked = editingResp && (editingResp.locked || isDeleted);
-  document.getElementById('respFormTitle').textContent = id==null?'Yeni Yanıt':'Yanıt #'+id;
+  document.getElementById('respFormTitle').textContent = id==null?t('resp_new'):(t('resp_title_num')+id);
   var note=document.getElementById('respLockNote');
-  note.textContent = isDeleted ? 'Bu yanıt OTTER tarafında silindi; artık düzenlenemez.'
-                               : 'Bu yanıt onaylandı; artık düzenlenemez.';
+  note.textContent = isDeleted ? t('resp_deleted_note') : t('resp_locked_note');
   note.classList.toggle('hide',!locked);
   document.getElementById('respFormActions').classList.toggle('hide',!!locked);
   hideMsg('respFormMsg');
@@ -1005,7 +1100,7 @@ function openResponse(id, prefill){
   var rbanner=document.getElementById('respReviseNote');
   if(rev){
     var labels=(rev.fields||[]).map(function(fid){ var f=OTTER_FORM.fields.filter(function(x){return x.id===fid;})[0]; return f?f.label:fid; });
-    rbanner.innerHTML='<b>Revize isteniyor.</b> Yalnız şu alanları düzeltip tekrar "Gönder": <b>'+esc(labels.join(', '))+'</b>'+(rev.note?('<br><span style="opacity:.85;">Not: '+esc(rev.note)+'</span>'):'');
+    rbanner.innerHTML='<b>'+esc(t('revise_req'))+'</b> '+esc(t('revise_only'))+' <b>'+esc(labels.join(', '))+'</b>'+(rev.note?('<br><span style="opacity:.85;">'+esc(t('note_word'))+': '+esc(rev.note)+'</span>'):'');
     rbanner.classList.remove('hide');
   } else { rbanner.classList.add('hide'); }
   renderFields(data||{}, locked, rev?(rev.fields||[]):null);
@@ -1019,12 +1114,11 @@ function closeResponse(){ document.getElementById('respForm').classList.add('hid
 function ensureLocationOn(bannerElId){
   var el=document.getElementById(bannerElId); if(!el) return;
   function warn(m){ el.textContent='📍 '+m; el.classList.remove('hide'); }
-  if(!navigator.geolocation){ warn('Cihaz konum (GPS) desteklemiyor — konum doğrulaması yapılamayacak.'); return; }
-  el.textContent='📍 Konum kontrol ediliyor…'; el.classList.remove('hide');
+  if(!navigator.geolocation){ warn(t('loc_no_gps')); return; }
+  el.textContent=t('loc_checking'); el.classList.remove('hide');
   navigator.geolocation.getCurrentPosition(
     function(){ el.classList.add('hide'); },
-    function(err){ warn(err&&err.code===1 ? 'Konum izni KAPALI — lütfen cihaz/tarayıcı konumunu açın (doğru konum için gerekli).'
-                                           : 'Konum alınamıyor — cihaz konumunu (GPS) açın.'); },
+    function(err){ warn(err&&err.code===1 ? t('loc_denied') : t('loc_unavail')); },
     {enableHighAccuracy:true, timeout:10000, maximumAge:30000}
   );
 }
@@ -1120,10 +1214,10 @@ async function saveResponse(submit){
     : {kind:'resp_insert', body:{owner_username:ME.username,form_id:OTTER_FORM.form_id,data:data,status:status}};
   var out=await sendWrite(function(){ return applyItem(item); }, item);
   btnD.disabled=btnS.disabled=false;
-  if(out.error){ show('respFormMsg','Kaydedilemedi: '+out.error.message,false); return; }
+  if(out.error){ show('respFormMsg',t('msg_save_fail')+out.error.message,false); return; }
   if(submit) markLocalInspected(data['fnv07eqsz']);   // kuyu ANINDA mor (yerel; w[9] gelince turuncu)
-  if(out.queued){ show('respFormMsg','Çevrimdışı kaydedildi — internet gelince gönderilecek.',true); updateNet(); setTimeout(closeResponse,900); return; }
-  show('respFormMsg',submit?'Gönderildi, admin onayına düştü.':'Taslak kaydedildi.',true);
+  if(out.queued){ show('respFormMsg',t('msg_saved_offline'),true); updateNet(); setTimeout(closeResponse,900); return; }
+  show('respFormMsg',submit?t('msg_submitted'):t('msg_draft_saved'),true);
   await loadResponses(); setTimeout(closeResponse,700);
 }
 document.getElementById('btnSaveDraft').onclick=function(){saveResponse(false);};
@@ -1142,22 +1236,22 @@ async function loadRevisions(){
   }
 }
 function renderRevisions(){
-  document.getElementById('revCount').textContent=REV.length+' atama';
+  document.getElementById('revCount').textContent=REV.length+' '+t('rev_count_word');
   var el=document.getElementById('revList');
-  if(!REV.length){ el.innerHTML='<div class="muted">Size atanan revizyon yok.</div>'; return; }
+  if(!REV.length){ el.innerHTML='<div class="muted">'+esc(t('rev_empty'))+'</div>'; return; }
   el.innerHTML=REV.map(function(r){
-    var pill=r.status==='revised'?'<span class="pill revised">Gönderildi</span>':'<span class="pill assigned">Bekliyor</span>';
+    var pill=r.status==='revised'?'<span class="pill revised">'+esc(t('rev_sent'))+'</span>':'<span class="pill assigned">'+esc(t('rev_pending'))+'</span>';
     var flds=(r.fields||[]).map(function(k){return REVISABLE_LABELS[k]||k;}).join(', ');
-    return '<div class="card"><div class="row"><div><b>Fizibilite: '+esc(r.feas_id)+'</b>'+
-      '<div class="muted">Alanlar: '+esc(flds)+'</div></div>'+
+    return '<div class="card"><div class="row"><div><b>'+esc(t('m_rev'))+': '+esc(r.feas_id)+'</b>'+
+      '<div class="muted">'+esc(t('rev_fields_label'))+': '+esc(flds)+'</div></div>'+
       '<div class="row" style="gap:8px;">'+pill+
-      '<button class="btn ghost sm" onclick="openRevision('+r.id+')">'+(r.status==='revised'?'Görüntüle/Düzenle':'Revize Et')+'</button></div></div></div>';
+      '<button class="btn ghost sm" onclick="openRevision('+r.id+')">'+(r.status==='revised'?esc(t('btn_view_edit')):esc(t('btn_revise')))+'</button></div></div></div>';
   }).join('');
 }
 function openRevision(id){
   editingRev=REV.filter(function(x){return x.id===id;})[0]; if(!editingRev) return;
-  document.getElementById('revFormTitle').textContent='Fizibilite: '+editingRev.feas_id;
-  document.getElementById('revNote').textContent=editingRev.note?('Not: '+editingRev.note):'';
+  document.getElementById('revFormTitle').textContent=t('m_rev')+': '+editingRev.feas_id;
+  document.getElementById('revNote').textContent=editingRev.note?(t('note_word')+': '+editingRev.note):'';
   hideMsg('revFormMsg');
   var cur=editingRev.revised&&Object.keys(editingRev.revised).length?editingRev.revised:editingRev.current||{};
   var html=(editingRev.fields||[]).map(function(k){
@@ -1178,9 +1272,9 @@ document.getElementById('btnRevSave').onclick=async function(){
   this.disabled=true;
   var item={kind:'rev_update', id:editingRev.id, body:{revised:revised,status:'revised'}};
   var out=await sendWrite(function(){ return applyItem(item); }, item);
-  if(out.error){ inputs.forEach(function(i){ i.disabled=false; }); this.disabled=false; show('revFormMsg','Gönderilemedi: '+out.error.message,false); return; }
-  if(out.queued){ show('revFormMsg','Çevrimdışı kaydedildi — internet gelince gönderilecek. Form kilitlendi.',true); updateNet(); setTimeout(closeRevision,1100); return; }
-  show('revFormMsg','Revize gönderildi ve kilitlendi; artık düzenlenemez.',true);
+  if(out.error){ inputs.forEach(function(i){ i.disabled=false; }); this.disabled=false; show('revFormMsg',t('send_fail')+out.error.message,false); return; }
+  if(out.queued){ show('revFormMsg',t('msg_saved_offline_locked'),true); updateNet(); setTimeout(closeRevision,1100); return; }
+  show('revFormMsg',t('rev_submitted_locked'),true);
   await loadRevisions(); setTimeout(closeRevision,900);
 };
 
@@ -1298,25 +1392,25 @@ async function openFeas(){
 function closeFeasSilent(){ if(_fzWatch!=null && navigator.geolocation){ try{navigator.geolocation.clearWatch(_fzWatch);}catch(e){} } _fzWatch=null; var f=document.getElementById('feasForm'); if(f) f.classList.add('hide'); }
 function closeFeas(){ closeFeasSilent(); document.getElementById('secRev').classList.remove('hide'); }
 function fzStartGPS(){
-  if(!navigator.geolocation){ document.getElementById('feasGpsBar').textContent='📍 Cihaz GPS desteklemiyor.'; return; }
+  if(!navigator.geolocation){ document.getElementById('feasGpsBar').textContent=t('fz_no_gps'); return; }
   if(_fzWatch!=null) try{navigator.geolocation.clearWatch(_fzWatch);}catch(e){}
   _fzWatch=navigator.geolocation.watchPosition(fzOnFix, function(err){
-    document.getElementById('feasGpsBar').textContent='📍 Konum alınamıyor: '+((err&&err.message)||'hata')+' — cihaz konumunu açın.';
+    document.getElementById('feasGpsBar').textContent=tf('fz_loc_fail',{e:((err&&err.message)||'hata')});
   }, {enableHighAccuracy:true, maximumAge:2000, timeout:20000});
 }
 function fzOnFix(p){
   var lat=p.coords.latitude, lon=p.coords.longitude, acc=p.coords.accuracy||0;
   _fzLast={lat:lat,lon:lon,acc:acc};
-  document.getElementById('feasGpsBar').textContent='📍 Canlı konum: '+lat.toFixed(6)+', '+lon.toFixed(6)+' (±'+Math.round(acc)+' m)';
+  document.getElementById('feasGpsBar').textContent=tf('fz_live_loc',{c:lat.toFixed(6)+', '+lon.toFixed(6), a:Math.round(acc)});
   document.getElementById('fzCoord').value=lat.toFixed(6)+', '+lon.toFixed(6);
   var ctry=countryOfJS(lat,lon); if(ctry) document.getElementById('fzCountry').value=ctry;
   var nr=fzNearestWell(lat,lon);
   var warnEl=document.getElementById('feasWarn'), card=document.getElementById('feasForm').querySelector('.card');
   if(nr){ var dm=nr.d<1000?(Math.round(nr.d)+' m'):((nr.d/1000).toFixed(2)+' km');
-    document.getElementById('fzDistWell').value=dm+' (Kuyu '+nr.w[2]+')';
-    if(nr.d<FZ_WARN_M){ warnEl.textContent='⚠ UYARI: En yakın su kuyusu yalnız '+Math.round(nr.d)+' m uzakta (400 m’den yakın). Bu konum uygun olmayabilir.'; warnEl.classList.remove('hide'); if(card) card.style.boxShadow='0 0 0 3px var(--err)'; }
+    document.getElementById('fzDistWell').value=dm+' ('+t('fz_well')+' '+nr.w[2]+')';
+    if(nr.d<FZ_WARN_M){ warnEl.textContent=tf('fz_warn',{m:Math.round(nr.d)}); warnEl.classList.remove('hide'); if(card) card.style.boxShadow='0 0 0 3px var(--err)'; }
     else { warnEl.classList.add('hide'); if(card) card.style.boxShadow=''; }
-  } else { document.getElementById('fzDistWell').value='(kuyu verisi yok)'; }
+  } else { document.getElementById('fzDistWell').value=t('well_no_data'); }
   if(!_fzCityDone && navigator.onLine){ _fzCityDone=true; fzReverseCity(lat,lon); }
 }
 function fzReverseCity(lat,lon){                               // İl: çevrimiçiyken bir kez (en iyi çaba)
@@ -1330,9 +1424,9 @@ function fzReverseCity(lat,lon){                               // İl: çevrimi�
 }
 document.getElementById('btnFeasSubmit').onclick=async function(){
   hideMsg('feasFormMsg');
-  if(!_fzLast){ show('feasFormMsg','Konum alınamadı — GPS açık mı? Koordinat zorunlu.',false); return; }
+  if(!_fzLast){ show('feasFormMsg',t('feas_need_loc'),false); return; }
   var nr=fzNearestWell(_fzLast.lat,_fzLast.lon);
-  if(nr && nr.d<FZ_WARN_M){ if(!confirm('En yakın su kuyusu yalnız '+Math.round(nr.d)+' m uzakta (400 m’den yakın). Yine de onaylıyor musunuz?')) return; }
+  if(nr && nr.d<FZ_WARN_M){ if(!confirm(tf('fz_confirm',{m:Math.round(nr.d)}))) return; }
   var body={ owner_username: ME.username,
     raw_coord: document.getElementById('fzCoord').value, lat:_fzLast.lat, lon:_fzLast.lon,
     country: document.getElementById('fzCountry').value.trim(), city: document.getElementById('fzCity').value.trim(),
@@ -1344,9 +1438,9 @@ document.getElementById('btnFeasSubmit').onclick=async function(){
   var item={kind:'feas_insert', body:body};
   var out=await sendWrite(function(){ return sb.from('field_feasibility').insert(body); }, item);
   btn.disabled=false;
-  if(out.error){ show('feasFormMsg','Gönderilemedi: '+out.error.message,false); return; }
-  if(out.queued){ show('feasFormMsg','Çevrimdışı kaydedildi — internet gelince gönderilecek.',true); updateNet(); setTimeout(closeFeas,900); return; }
-  show('feasFormMsg','Gönderildi — Fizibilite Kontrolü’ne düşecek.',true);
+  if(out.error){ show('feasFormMsg',t('send_fail')+out.error.message,false); return; }
+  if(out.queued){ show('feasFormMsg',t('msg_saved_offline'),true); updateNet(); setTimeout(closeFeas,900); return; }
+  show('feasFormMsg',t('feas_submitted'),true);
   setTimeout(closeFeas,900);
 };
 
@@ -1385,10 +1479,10 @@ async function initMapTab(){
       {position:'topright', collapsed:true}).addTo(MAP);
     WCLUSTER=L.layerGroup(); MAP.addLayer(WCLUSTER);   // KÜMELEME YOK — her konum ayrı
     loadCountryBorders();   // ülke sınırları + adları
-    var info=document.getElementById('wellsInfo'); info.textContent='Kuyular yükleniyor…';
+    var info=document.getElementById('wellsInfo'); info.textContent=t('dl_wells_loading');
     await loadInspLocal();   // yerel mor işaretleri (çevrimdışı) yükle
     var res=await loadWells(false); renderWells(); populateMapFilters();
-    info.textContent=(res.from==='none')?'Kuyu verisi yok — çevrimiçiyken "Kuyuları Güncelle".':(WELLS.length+' kuyu'+(res.from==='cache'?' (önbellek)':(res.from==='online'?' (güncel)':'')));
+    info.textContent=(res.from==='none')?t('wells_no_data'):(WELLS.length+' '+t('vk_wells')+(res.from==='cache'?(' '+t('vk_cached')):(res.from==='online'?(' '+t('vk_current')):'')));
   }
   setTimeout(function(){ if(MAP) MAP.invalidateSize(); },150);
 }
@@ -1407,7 +1501,7 @@ function wellsMatching(){
   });
 }
 function _uniqTr(vals){ var s={}; vals.forEach(function(v){ if(v!=null&&v!=='') s[v]=1; }); return Object.keys(s).sort(function(a,b){return String(a).localeCompare(String(b),'tr');}); }
-var _MSEL={country:{id:'mselCountry',label:'Ülke'},partner:{id:'mselPartner',label:'Partner'},year:{id:'mselYear',label:'Tabela yılı'}};
+var _MSEL={country:{id:'mselCountry',labelKey:'country'},partner:{id:'mselPartner',labelKey:'partner_word'},year:{id:'mselYear',labelKey:'year_word'}};
 // Piramit: üst seçim bir sonraki seçenekleri daraltır (çoklu seçimde birleşim)
 function _optsFor(dim){
   var iv=_inspVal();
@@ -1423,12 +1517,13 @@ function renderMsel(dim){
   var opts=_optsFor(dim);
   MAP_FILTER[dim]=MAP_FILTER[dim].filter(function(v){return opts.indexOf(v)>=0;});   // geçersiz seçimleri at
   var n=MAP_FILTER[dim].length;
-  btn.textContent=(n?(cfg.label+' ('+n+')'):(cfg.label+' — tümü'))+' ▾';
+  var lbl=t(cfg.labelKey);
+  btn.textContent=(n?(lbl+' ('+n+')'):(lbl+' — '+t('all_word')))+' ▾';
   btn.classList.toggle('on', n>0);
   panel.innerHTML = opts.length ? opts.map(function(o){
     var ck=MAP_FILTER[dim].indexOf(o)>=0?' checked':'';
     return '<label><input type="checkbox" value="'+esc(o)+'"'+ck+'/> '+esc(o)+'</label>';
-  }).join('') : '<div class="msel-empty">Seçenek yok</div>';
+  }).join('') : '<div class="msel-empty">'+esc(t('no_options'))+'</div>';
   [].slice.call(panel.querySelectorAll('input[type=checkbox]')).forEach(function(cb){
     cb.onchange=function(){ var arr=MAP_FILTER[dim], v=cb.value, i=arr.indexOf(v);
       if(cb.checked){ if(i<0) arr.push(v); } else if(i>=0){ arr.splice(i,1); }
@@ -1457,25 +1552,25 @@ function searchWells(){
   var raw=(document.getElementById('mapSearch').value||'').trim(); var q=nkey(raw); if(!q) return;
   function hits(pool){ return pool.filter(function(w){ return nkey(String(w[2])).indexOf(q)>=0 || nkey(String(w[3]||'')).indexOf(q)>=0; }); }
   var hit=hits(wellsMatching()); if(!hit.length) hit=hits(WELLS);
-  if(!hit.length){ show('globalMsg','Eşleşen kuyu yok: '+esc(raw),false); return; }
+  if(!hit.length){ show('globalMsg',t('vk_no_match')+esc(raw),false); return; }
   var w=hit[0];
   GRP_COUNTRY=w[4]||'(Ülkesiz)'; renderWells();        // bulunan kuyunun ülkesini aç (tek tek)
   if(MAP){ MAP.setView([w[0],w[1]],16);
     L.popup().setLatLng([w[0],w[1]]).setContent(wellPopupHTML(w)).openOn(MAP);
   }
-  show('globalMsg',hit.length+' eşleşme — "'+esc(String(w[2]))+'" gösteriliyor.',true);
+  show('globalMsg',tf('search_showing',{n:hit.length,w:esc(String(w[2]))}),true);
 }
 // Kuyu popup içeriği (sorumlu/iletişim alanları + Yeni Yanıt + Görsel) — WELLS: [lat,lon,id,ad,ülke,yıl,partner,sorumlu?,iletişim?,görsel?]
 function wellPopupHTML(w){
   var enc=encodeURIComponent(String(w[2]));
   var resp=w[7]||'', contact=w[8]||'';
   var h='<b>'+esc(w[2])+'</b><br>'+esc(w[3]||'')+(w[4]?('<br><span style="opacity:.7">'+esc(w[4])+'</span>'):'');
-  h+='<br><span style="opacity:.7">Su Kuyusu Sorumlusu:</span> '+(resp?esc(resp):'—');
-  h+='<br><span style="opacity:.7">Sorumlu İletişim:</span> '+(contact?esc(contact):'—');
-  h+='<br><span style="opacity:.7">Son Denetim:</span> '+(w[9]?('🟠 '+esc(w[9])):(INSP_LOCAL.has(String(w[2]))?'🟣 Yerel dolduruldu (senkron bekliyor)':'Denetlenmedi'));
+  h+='<br><span style="opacity:.7">'+esc(t('k_responsible'))+':</span> '+(resp?esc(resp):'—');
+  h+='<br><span style="opacity:.7">'+esc(t('k_contact'))+':</span> '+(contact?esc(contact):'—');
+  h+='<br><span style="opacity:.7">'+esc(t('pop_last_insp'))+':</span> '+(w[9]?('🟠 '+esc(w[9])):(INSP_LOCAL.has(String(w[2]))?('🟣 '+esc(t('pop_local_filled'))):esc(t('st_uninspected'))));
   h+='<div style="margin-top:7px;display:flex;gap:6px;flex-wrap:wrap;">'+
-     '<button onclick="openRespWell(\''+enc+'\')" style="border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 Yeni Yanıt</button>'+
-     '<button onclick="showWellImage(\''+enc+'\')" style="border:1px solid #252b38;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#1e2330;color:#f0ede8;cursor:pointer;">🖼️ Görsel</button>'+
+     '<button onclick="openRespWell(\''+enc+'\')" style="border:none;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#00B9C6;color:#07121a;cursor:pointer;">📝 '+esc(t('resp_new'))+'</button>'+
+     '<button onclick="showWellImage(\''+enc+'\')" style="border:1px solid #252b38;border-radius:6px;padding:6px 10px;font-size:12px;font-weight:600;background:#1e2330;color:#f0ede8;cursor:pointer;">🖼️ '+esc(t('pop_image'))+'</button>'+
      '</div>';
   return h;
 }
@@ -1486,9 +1581,9 @@ function imgManGet(wid){ return idbGet('imgman').then(function(m){ return (m&&m[
 function imgManSet(wid, names){ return idbGet('imgman').then(function(m){ m=m||{}; m[String(wid)]=names; return idbSet('imgman', m); }).catch(function(){}); }
 async function showWellImage(encId){
   var wid=decodeURIComponent(encId);
-  document.getElementById('imgTitle').textContent='Su Kuyusu Görseli — '+wid;
+  document.getElementById('imgTitle').textContent=t('img_title')+' — '+wid;
   var body=document.getElementById('imgBody');
-  body.innerHTML='<div class="muted" style="padding:24px 10px;">Görseller yükleniyor…</div>';
+  body.innerHTML='<div class="muted" style="padding:24px 10px;">'+esc(t('img_loading'))+'</div>';
   document.getElementById('imgOverlay').style.display='flex';
   var names=null;
   if(navigator.onLine){                                   // çevrimiçi: listele + manifesti idb'ye yaz
@@ -1497,8 +1592,8 @@ async function showWellImage(encId){
     }catch(e){}
   }
   if(names==null){ names=await imgManGet(wid); }          // çevrimdışı/liste başarısız → kayıtlı manifest
-  if(names==null){ body.innerHTML='<div class="muted" style="padding:24px 10px;">'+(navigator.onLine?'Görseller alınamadı.':'Çevrimdışısınız — bu kuyunun görselleri önceden indirilmemiş.')+'</div>'; return; }
-  if(!names.length){ body.innerHTML='<div class="muted" style="padding:28px 10px;">Bu kuyunun görseli henüz eklenmedi.</div>'; return; }
+  if(names==null){ body.innerHTML='<div class="muted" style="padding:24px 10px;">'+esc(navigator.onLine?t('img_fetch_fail'):t('img_offline_none'))+'</div>'; return; }
+  if(!names.length){ body.innerHTML='<div class="muted" style="padding:28px 10px;">'+esc(t('img_none'))+'</div>'; return; }
   body.innerHTML=names.map(function(n){
     var u=sb.storage.from(IMG_BUCKET).getPublicUrl(String(wid)+'/'+n).data.publicUrl;   // çevrimdışıyken SW önbellekten servis eder
     return '<img src="'+esc(u)+'" alt="'+esc(n)+'" loading="lazy" style="max-width:100%;max-height:78vh;border-radius:8px;margin-bottom:8px;display:block;"/>';
@@ -1862,26 +1957,26 @@ var _lastFix=null, _nearest=[];
 function showNearest(lat,lon,acc){
   _lastFix={lat:lat,lon:lon,acc:acc};
   _nearest=WELLS.map(function(w){ return {w:w,d:haversine(lat,lon,w[0],w[1])}; }).sort(function(a,b){return a.d-b.d;}).slice(0,5);
-  var html='<div class="muted" style="margin-bottom:6px;">Konum: '+lat.toFixed(6)+', '+lon.toFixed(6)+' (±'+Math.round(acc)+' m)</div>';
+  var html='<div class="muted" style="margin-bottom:6px;">'+esc(tf('loc_header',{c:lat.toFixed(6)+', '+lon.toFixed(6), a:Math.round(acc)}))+'</div>';
   html+=_nearest.map(function(x,i){ var dm=x.d<1000?(Math.round(x.d)+' m'):((x.d/1000).toFixed(2)+' km');
     return '<div class="card" style="padding:8px 12px;"><div class="row"><div><b>'+esc(x.w[2])+'</b> <span class="muted">'+esc((x.w[3]||'').slice(0,40))+'</span></div>'+
       '<div class="row" style="gap:8px;"><span class="pill" style="background:rgba(0,185,198,.18);color:var(--accent);">'+dm+'</span>'+
-      '<button class="btn ok" style="padding:5px 10px;font-size:12px;" onclick="saveCoordCheck('+i+')">Teyit Et</button></div></div></div>'; }).join('');
-  document.getElementById('nearList').innerHTML=html||'<div class="muted">Yakında kuyu yok.</div>';
+      '<button class="btn ok" style="padding:5px 10px;font-size:12px;" onclick="saveCoordCheck('+i+')">'+esc(t('confirm_btn'))+'</button></div></div></div>'; }).join('');
+  document.getElementById('nearList').innerHTML=html||'<div class="muted">'+esc(t('near_empty'))+'</div>';
 }
 async function saveCoordCheck(i){
-  if(!_lastFix||!_nearest[i]){ show('globalMsg','Önce konumunu bul.',false); return; }
+  if(!_lastFix||!_nearest[i]){ show('globalMsg',t('loc_first'),false); return; }
   var x=_nearest[i];
-  var note=prompt('"'+x.w[2]+'" kuyusu için teyit notu (opsiyonel):','');
+  var note=prompt(tf('confirm_note_prompt',{w:x.w[2]}),'');
   if(note===null) return;              // vazgeçti
   var body={owner_username:ME.username, well_id:String(x.w[2]||''), well_name:String(x.w[3]||''),
             measured_lat:_lastFix.lat, measured_lon:_lastFix.lon, accuracy:Math.round(_lastFix.acc||0),
             distance_m:Math.round(x.d), note:note||''};
   var item={kind:'coord_insert', body:body};
   var out=await sendWrite(function(){ return applyItem(item); }, item);
-  if(out.error){ show('globalMsg','Kaydedilemedi: '+out.error.message,false); return; }
-  if(out.queued){ show('globalMsg','Teyit çevrimdışı kaydedildi — internet gelince gönderilecek.',true); updateNet(); return; }
-  show('globalMsg','Teyit kaydedildi ('+x.w[2]+').',true);
+  if(out.error){ show('globalMsg',t('msg_save_fail')+out.error.message,false); return; }
+  if(out.queued){ show('globalMsg',t('confirm_saved_offline'),true); updateNet(); return; }
+  show('globalMsg',tf('confirm_saved',{w:x.w[2]}),true);
 }
 document.getElementById('btnLocate').onclick=function(){ startGPS(); };
 ['mselCountry','mselPartner','mselYear'].forEach(function(id){ var box=document.getElementById(id); if(box) box.querySelector('.msel-btn').onclick=function(){ toggleMsel(box); }; });
@@ -1891,10 +1986,10 @@ document.getElementById('btnMapFiltClear').onclick=clearMapFilter;
 (function(){ var mi=document.getElementById('mapInsp'); if(mi) mi.onchange=function(){ populateMapFilters(); applyMapFilter(true); }; })();
 document.getElementById('btnMapSearch').onclick=searchWells;
 document.getElementById('mapSearch').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); searchWells(); } });
-document.getElementById('btnWellsRefresh').onclick=async function(){ var self=this; self.disabled=true; document.getElementById('wellsInfo').textContent='Güncelleniyor…';
+document.getElementById('btnWellsRefresh').onclick=async function(){ var self=this; self.disabled=true; document.getElementById('wellsInfo').textContent=t('updating');
   var res=await loadWells(true); renderWells(); populateMapFilters(); self.disabled=false;
-  document.getElementById('wellsInfo').textContent=(res.from==='online')?(WELLS.length+' kuyu (güncel)'):(WELLS.length+' kuyu');
-  show('globalMsg',res.from==='online'?'Kuyular güncellendi.':'Güncellenemedi (çevrimdışı).',res.from==='online');
+  document.getElementById('wellsInfo').textContent=(res.from==='online')?(WELLS.length+' '+t('vk_wells')+' '+t('vk_current')):(WELLS.length+' '+t('vk_wells'));
+  show('globalMsg',res.from==='online'?t('wells_updated'):t('wells_update_fail'),res.from==='online');
 };
 
 init();
