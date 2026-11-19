@@ -20,8 +20,20 @@
 html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100vh;}
 .wrap{max-width:860px;margin:0 auto;padding:16px;}
 header{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap;gap:8px;}
-.brand{font-size:18px;font-weight:600;color:var(--accent);}
-.who{font-size:13px;color:var(--text2);}
+.brand{font-size:18px;font-weight:600;color:var(--accent);flex:0 1 auto;min-width:0;}
+.hleft{display:flex;align-items:center;gap:9px;min-width:0;flex:1 1 auto;}
+.who{font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;min-width:0;}
+.who:before{content:"·";margin-right:7px;color:var(--muted);}
+.net-dot{width:11px;height:11px;border-radius:50%;background:var(--muted);flex:0 0 auto;transition:background .2s;}
+.net-dot.on{background:var(--ok);}
+.net-dot.warn{background:var(--warn);}
+.net-dot.off{background:var(--err);}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#07121a;font-weight:700;font-size:14px;letter-spacing:.3px;display:inline-flex;align-items:center;justify-content:center;border:none;cursor:pointer;font-family:inherit;flex:0 0 auto;padding:0;}
+.avatar:active{transform:scale(.95);}
+.prof-hero{display:flex;align-items:center;gap:14px;}
+.prof-av{width:54px;height:54px;border-radius:50%;background:var(--accent);color:#07121a;font-weight:700;font-size:20px;letter-spacing:.5px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;}
+.prof-name{font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+@media(max-width:420px){.brand{font-size:16px;}.who{font-size:12px;}}
 .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
 .tab{background:var(--card3);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer;}
 .tab.active{background:var(--accent);color:#07121a;font-weight:600;border-color:var(--accent);}
@@ -108,41 +120,42 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
   <div id="loginView" class="login">
     <img src="icon-192.png" alt="OTTER" style="width:64px;height:64px;border-radius:14px;display:block;margin:0 auto 10px;">
     <div class="brand" style="font-size:22px;text-align:center;margin-bottom:6px;">OTTER Saha Portalı</div>
-    <div class="muted" style="text-align:center;margin-bottom:20px;">Kullanıcı adı ve şifrenizle giriş yapın</div>
+    <div class="muted" data-i18n="login_sub" style="text-align:center;margin-bottom:20px;">Kullanıcı adı ve şifrenizle giriş yapın</div>
     <div class="card">
-      <label class="fl">Kullanıcı adı</label>
+      <label class="fl" data-i18n="username">Kullanıcı adı</label>
       <input type="text" id="luser" autocomplete="username" autocapitalize="none"/>
-      <label class="fl">Şifre</label>
+      <label class="fl" data-i18n="password">Şifre</label>
       <input type="password" id="lpass" autocomplete="current-password"/>
       <div id="loginMsg" class="msg"></div>
-      <div class="actions"><button class="btn" id="btnLogin" style="width:100%;">Giriş Yap</button></div>
+      <div class="actions"><button class="btn" id="btnLogin" data-i18n="sign_in" style="width:100%;">Giriş Yap</button></div>
     </div>
   </div>
 
   <!-- UYGULAMA -->
   <div id="appView" class="hide">
     <header>
-      <span class="brand" onclick="showHome()" title="Ana Ekran" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;"><img src="icon-192.png" alt="OTTER" style="width:28px;height:28px;border-radius:7px;flex:0 0 auto;">OTTER Saha Portalı</span>
-      <span class="row" style="gap:12px;">
-        <span id="netChip" class="pill" style="display:none;"></span>
-        <span class="who" id="whoami" onclick="showTab('acct')" title="Hesabım" style="cursor:pointer;text-decoration:underline;text-underline-offset:3px;"></span>
-        <button class="btn ghost sm" id="btnLogout">Çıkış</button></span>
+      <span class="hleft">
+        <span id="netDot" class="net-dot" title=""></span>
+        <span class="brand" onclick="navHome()" data-i18n-title="home" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;"><img src="icon-192.png" alt="OTTER" style="width:28px;height:28px;border-radius:7px;flex:0 0 auto;">OTTER Saha Portalı</span>
+        <span class="who" id="whoami" onclick="nav('acct')" title="" style="cursor:pointer;"></span>
+      </span>
+      <button class="avatar" id="btnProfile" onclick="nav('acct')" data-i18n-title="my_account" title="">?</button>
     </header>
     <div id="globalMsg" class="msg"></div>
 
     <!-- Ana Ekran: modül kareleri (her sırada simetrik 3 kare) -->
     <section id="secHome">
       <div class="home-grid">
-        <button class="home-tile" data-mod="resp" onclick="showTab('resp')">
-          <span class="ico">📋</span><span class="lbl">Denetim</span><span class="sub">Yanıtlar</span></button>
-        <button class="home-tile" data-mod="rev" onclick="showTab('rev')">
-          <span class="ico">🧭</span><span class="lbl">Fizibilite</span><span class="sub">Yeni / Revizyon</span></button>
-        <button class="home-tile" data-mod="map" onclick="showTab('map')">
-          <span class="ico">🗺️</span><span class="lbl">GPS</span><span class="sub">Harita</span></button>
-        <button class="home-tile" data-mod="vakif" onclick="showTab('vakif')">
-          <span class="ico">🏛️</span><span class="lbl">Vakıf Eser</span><span class="sub">Yakında</span></button>
-        <button class="home-tile" data-mod="report" onclick="showTab('report')">
-          <span class="ico">📊</span><span class="lbl">Rapor</span><span class="sub">Dashboard</span></button>
+        <button class="home-tile" data-mod="resp" onclick="nav('resp')">
+          <span class="ico">📋</span><span class="lbl" data-i18n="m_resp">Denetim</span><span class="sub" data-i18n="m_resp_sub">Yanıtlar</span></button>
+        <button class="home-tile" data-mod="rev" onclick="nav('rev')">
+          <span class="ico">🧭</span><span class="lbl" data-i18n="m_rev">Fizibilite</span><span class="sub" data-i18n="m_rev_sub">Yeni / Revizyon</span></button>
+        <button class="home-tile" data-mod="map" onclick="nav('map')">
+          <span class="ico">🗺️</span><span class="lbl" data-i18n="m_map">GPS</span><span class="sub" data-i18n="m_map_sub">Harita</span></button>
+        <button class="home-tile" data-mod="vakif" onclick="nav('vakif')">
+          <span class="ico">🏛️</span><span class="lbl" data-i18n="m_vakif">Vakıf Eser</span><span class="sub" data-i18n="m_vakif_sub">Bilgi Kartı</span></button>
+        <button class="home-tile" data-mod="report" onclick="nav('report')">
+          <span class="ico">📊</span><span class="lbl" data-i18n="m_report">Rapor</span><span class="sub" data-i18n="m_report_sub">Panel</span></button>
       </div>
     </section>
 
@@ -197,7 +210,9 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
         #secVakif .vk-memo{background:#1e2330;border:1px solid #252b38;border-left:3px solid #00B9C6;border-radius:9px;padding:10px 12px;font-size:13px;}
         #secVakif .sub-h{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#7a8099;font-weight:700;margin:12px 0 5px;}
         #secVakif .vk-imgbtn{border:1px solid #252b38;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;background:#1e2330;color:#f0ede8;cursor:pointer;}
-        @media(max-width:560px){#secVakif .vk-g,#secVakif .vk-g.two{grid-template-columns:repeat(2,1fr);}}
+        @media(max-width:560px){#secVakif .vk-g,#secVakif .vk-g.two{grid-template-columns:repeat(2,1fr);}
+          /* 2 sütunda tek kalan kutu satırı tam kaplasın (Mahalle/Köy, Faydalanan, Pompa Derinliği) */
+          #secVakif .vk-g>.vk-f:last-child:nth-child(odd){grid-column:1/-1;}}
         @media(max-width:380px){#secVakif .vk-g,#secVakif .vk-g.two{grid-template-columns:1fr;}}
         /* ÇIKTI (yazdırma): koyu tema çıktıda silik kalıyor → beyaz zemin + net siyah metin */
         @media print {
@@ -254,12 +269,12 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
       </style>
       <div id="vkListView">
         <div class="vk-bar">
-          <input id="vkSearch" type="text" placeholder="Kuyu adı / ID ara…" onkeydown="if(event.key==='Enter'){event.preventDefault();vkSearch();}"/>
-          <button class="vk-btn" onclick="vkSearch()">Ara</button>
-          <button class="vk-btn" onclick="loadVakif(true).then(vkAfterLoad)">⟳ Güncelle</button>
+          <input id="vkSearch" type="text" data-i18n-ph="vk_search_ph" placeholder="Kuyu adı / ID ara…" onkeydown="if(event.key==='Enter'){event.preventDefault();vkSearch();}"/>
+          <button class="vk-btn" onclick="vkSearch()" data-i18n="search">Ara</button>
+          <button class="vk-btn" onclick="loadVakif(true).then(vkAfterLoad)" data-i18n="refresh">⟳ Güncelle</button>
         </div>
-        <div class="vk-info" id="vkInfo">Yükleniyor…</div>
-        <div id="vkBack" class="hide" style="margin-bottom:8px;"><button class="vk-btn" onclick="vkShowCountries()">← Tüm Ülkeler</button></div>
+        <div class="vk-info" id="vkInfo" data-i18n="loading">Yükleniyor…</div>
+        <div id="vkBack" class="hide" style="margin-bottom:8px;"><button class="vk-btn" onclick="history.back()" data-i18n="all_countries">← Tüm Ülkeler</button></div>
         <div id="vkList"></div>
       </div>
       <div id="vkDetailView" class="hide">
@@ -368,28 +383,40 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
     <!-- Hesabım -->
     <section id="secAcct" class="hide">
       <div class="card">
-        <b>Hesap Bilgileri</b>
-        <div id="acctInfo" style="margin-top:12px;"></div>
+        <div class="prof-hero">
+          <span class="prof-av" id="acctAvatar">?</span>
+          <div style="min-width:0;">
+            <div class="prof-name" id="acctDisplay">—</div>
+            <div class="muted" id="acctUser" style="font-size:12px;"></div>
+          </div>
+        </div>
+        <div id="acctInfo" style="margin-top:14px;"></div>
+        <label class="fl" data-i18n="language" style="margin-top:14px;">Dil</label>
+        <select id="langSel" onchange="setLang(this.value)">
+          <option value="tr">Türkçe</option>
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+        </select>
       </div>
       <div class="card" style="margin-top:14px;">
-        <b>Şifre Değiştir</b>
-        <div class="muted" style="margin:6px 0 12px;font-size:13px;">Yeni şifreni belirle (en az 6 karakter). Değiştirmek için internet gerekir.</div>
-        <label class="fl">Yeni Şifre</label>
-        <input type="password" id="acctPass1" autocomplete="new-password" placeholder="Yeni şifre"/>
-        <label class="fl" style="margin-top:10px;">Yeni Şifre (tekrar)</label>
-        <input type="password" id="acctPass2" autocomplete="new-password" placeholder="Yeni şifre tekrar"/>
+        <b data-i18n="change_pass">Şifre Değiştir</b>
+        <div class="muted" data-i18n="change_pass_hint" style="margin:6px 0 12px;font-size:13px;">Yeni şifreni belirle (en az 6 karakter). Değiştirmek için internet gerekir.</div>
+        <label class="fl" data-i18n="new_pass">Yeni Şifre</label>
+        <input type="password" id="acctPass1" autocomplete="new-password" data-i18n-ph="new_pass"/>
+        <label class="fl" data-i18n="new_pass2" style="margin-top:10px;">Yeni Şifre (tekrar)</label>
+        <input type="password" id="acctPass2" autocomplete="new-password" data-i18n-ph="new_pass2"/>
         <div id="acctMsg" class="msg"></div>
         <div class="actions" style="margin-top:12px;">
-          <button class="btn ok" id="btnChangePass">Şifreyi Güncelle</button>
+          <button class="btn ok" id="btnChangePass" data-i18n="update_pass">Şifreyi Güncelle</button>
         </div>
       </div>
       <div class="card" style="margin-top:14px;">
-        <b>Çevrimdışı Harita İndir</b>
-        <div class="muted" style="margin:6px 0 12px;font-size:13px;">Seçtiğin ülkedeki kuyuların çevresindeki uydu karolarını indir; sahada internet olmadan harita açılır. İndirmek için internet gerekir.</div>
-        <label class="fl">Ülke</label>
+        <b data-i18n="dl_map_title">Çevrimdışı Harita İndir</b>
+        <div class="muted" data-i18n="dl_map_hint" style="margin:6px 0 12px;font-size:13px;">Seçtiğin ülkedeki kuyuların çevresindeki uydu karolarını indir; sahada internet olmadan harita açılır. İndirmek için internet gerekir.</div>
+        <label class="fl" data-i18n="country">Ülke</label>
         <select id="dlCountry"><option value="">— yükleniyor —</option></select>
         <div class="row" style="gap:8px;margin-top:8px;">
-          <button class="btn ghost sm" id="btnDlLoadWells">⟳ Kuyuları Yükle</button>
+          <button class="btn ghost sm" id="btnDlLoadWells" data-i18n="dl_load_wells">⟳ Kuyuları Yükle</button>
           <span class="muted" id="dlWellsInfo" style="font-size:12px;"></span>
         </div>
         <div id="dlEstimate" class="muted" style="margin-top:8px;font-size:13px;"></div>
@@ -399,15 +426,15 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
         </div>
         <div id="dlMsg" class="msg"></div>
         <div class="actions" style="margin-top:12px;">
-          <button class="btn ok" id="btnDlMap">Haritayı İndir</button>
-          <button class="btn ghost" id="btnDlImages">🖼️ Görselleri İndir</button>
-          <button class="btn ghost hide" id="btnDlCancel">İptal</button>
+          <button class="btn ok" id="btnDlMap" data-i18n="dl_map_btn">Haritayı İndir</button>
+          <button class="btn ghost" id="btnDlImages" data-i18n="dl_images_btn">🖼️ Görselleri İndir</button>
+          <button class="btn ghost hide" id="btnDlCancel" data-i18n="cancel">İptal</button>
         </div>
       </div>
       <div class="card" style="margin-top:14px;">
         <div class="row">
-          <span class="muted">Oturumu bu cihazda kapat.</span>
-          <button class="btn ghost" id="btnLogout2">Çıkış Yap</button>
+          <span class="muted" data-i18n="logout_hint">Oturumu bu cihazda kapat.</span>
+          <button class="btn ghost" id="btnLogout2" data-i18n="sign_out">Çıkış Yap</button>
         </div>
       </div>
     </section>
@@ -461,6 +488,115 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
 <script src="html2canvas.min.js?v=1"></script>
 <script>
 var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ══════════════════════════════════════════════════════════════
+//  i18n — dil paketleri (TR / EN / FR). Yeni UI metinleri DAİMA
+//  buraya eklenir; statik HTML data-i18n / data-i18n-ph / data-i18n-title,
+//  dinamik JS t('anahtar'). Dil tercihi profilden; değişince reload.
+// ══════════════════════════════════════════════════════════════
+var LANGS = ['tr','en','fr'];
+var LANG = (function(){ try{ var l=localStorage.getItem('otter_lang'); return LANGS.indexOf(l)>=0?l:'tr'; }catch(e){ return 'tr'; } })();
+var I18N = {
+  tr:{
+    login_sub:'Kullanıcı adı ve şifrenizle giriş yapın', username:'Kullanıcı adı', password:'Şifre',
+    sign_in:'Giriş Yap', login_need:'Kullanıcı adı ve şifre gerekli.', login_fail:'Giriş başarısız: kullanıcı adı veya şifre hatalı.',
+    my_account:'Profil', home:'Ana Ekran', net_online:'Çevrimiçi', net_offline:'Çevrimdışı', net_waiting:'bekliyor',
+    m_resp:'Denetim', m_resp_sub:'Yanıtlar', m_rev:'Fizibilite', m_rev_sub:'Yeni / Revizyon',
+    m_map:'GPS', m_map_sub:'Harita', m_vakif:'Vakıf Eser', m_vakif_sub:'Bilgi Kartı', m_report:'Rapor', m_report_sub:'Panel',
+    acct_info:'Hesap Bilgileri', display_name:'Görünen Ad', email:'E-posta', created:'Oluşturulma', last_login:'Son Giriş',
+    language:'Dil', change_pass:'Şifre Değiştir', change_pass_hint:'Yeni şifreni belirle (en az 6 karakter). Değiştirmek için internet gerekir.',
+    new_pass:'Yeni Şifre', new_pass2:'Yeni Şifre (tekrar)', update_pass:'Şifreyi Güncelle',
+    pass_min:'Şifre en az 6 karakter olmalı.', pass_match:'Şifreler eşleşmiyor.', pass_need_net:'Şifre değiştirmek için internet gerekir.',
+    pass_fail:'Şifre güncellenemedi: ', pass_ok:'Şifre başarıyla güncellendi.', pass_net_err:'Şifre güncellenemedi (ağ hatası).',
+    dl_map_title:'Çevrimdışı Harita İndir', dl_map_hint:'Seçtiğin ülkedeki kuyuların çevresindeki uydu karolarını indir; sahada internet olmadan harita açılır. İndirmek için internet gerekir.',
+    country:'Ülke', dl_load_wells:'⟳ Kuyuları Yükle', dl_map_btn:'Haritayı İndir', dl_images_btn:'🖼️ Görselleri İndir', cancel:'İptal',
+    logout_hint:'Oturumu bu cihazda kapat.', sign_out:'Çıkış Yap', loading:'Yükleniyor…',
+    back_list:'← Liste', all_countries:'← Tüm Ülkeler', search:'Ara', refresh:'⟳ Güncelle',
+    vk_search_ph:'Kuyu adı / ID ara…', vk_wells_count:'kuyu (güncel)', vk_wells:'kuyu', vk_no_wells:'Kuyu yok.',
+    vk_cached:'(önbellek)', vk_current:'(güncel)', vk_no_data:'Veri yok — çevrimiçiyken "⟳ Güncelle".', vk_match:'eşleşme', vk_no_match:'Eşleşen kuyu yok: ', vk_unnamed:'(İsimsiz)',
+    st_working:'Çalışıyor', st_broken:'Çalışmıyor', st_uninspected:'Denetlenmedi',
+    offline_list:'Çevrimdışı — son kaydedilen liste gösteriliyor.',
+    k_wellid:'Su Kuyusu ID', k_coord:'Koordinat', k_portalid:'Portal Vakıf Eser ID',
+    vk_kunye:'Vakıf Eser Künyesi', k_country:'Ülke', k_city:'Şehir', k_village:'Mahalle / Köy',
+    k_pop:'Bölge Nüfusu', k_house:'Hane Sayısı', k_benef:'Faydalanan',
+    k_welldepth:'Su Kuyusu Derinliği', k_pipedepth:'Boru Derinliği', k_pumpdepth:'Pompa Derinliği',
+    k_responsible:'Su Kuyusu Sorumlusu', k_contact:'Sorumlu İletişim',
+    vk_inspstatus:'Denetim Durumu', vk_insp_word:'denetim', vk_no_insp:'Bu kuyu için denetim yanıtı yok.',
+    vk_images:'Görseller', vk_images_btn:'Görselleri Gör', pdf_download:'PDF İndir', wa_share:'WhatsApp ile Paylaş',
+    i_inspector:'Denetleyen', i_partner:'Partner', i_working:'Çalışıyor mu?', i_coord:'Koordinat',
+    i_repair:'Tamirat İhtiyacı', i_health:'Sağlık Şartları', i_usage:'Kullanım Amaçları',
+    i_rating:'Durum ve Verim Değerlendirmesi', i_component:'Bileşen', i_note:'Denetçi Açıklaması'
+  },
+  en:{
+    login_sub:'Sign in with your username and password', username:'Username', password:'Password',
+    sign_in:'Sign in', login_need:'Username and password are required.', login_fail:'Login failed: wrong username or password.',
+    my_account:'Profile', home:'Home', net_online:'Online', net_offline:'Offline', net_waiting:'pending',
+    m_resp:'Inspection', m_resp_sub:'Responses', m_rev:'Feasibility', m_rev_sub:'New / Revision',
+    m_map:'GPS', m_map_sub:'Map', m_vakif:'Vakıf Eser', m_vakif_sub:'Info Card', m_report:'Report', m_report_sub:'Dashboard',
+    acct_info:'Account Information', display_name:'Display Name', email:'Email', created:'Created', last_login:'Last Sign-in',
+    language:'Language', change_pass:'Change Password', change_pass_hint:'Set a new password (at least 6 characters). Internet is required to change it.',
+    new_pass:'New Password', new_pass2:'New Password (again)', update_pass:'Update Password',
+    pass_min:'Password must be at least 6 characters.', pass_match:'Passwords do not match.', pass_need_net:'Internet is required to change the password.',
+    pass_fail:'Could not update password: ', pass_ok:'Password updated successfully.', pass_net_err:'Could not update password (network error).',
+    dl_map_title:'Download Offline Map', dl_map_hint:'Download the satellite tiles around the wells in the selected country; the map opens without internet in the field. Internet is required to download.',
+    country:'Country', dl_load_wells:'⟳ Load Wells', dl_map_btn:'Download Map', dl_images_btn:'🖼️ Download Images', cancel:'Cancel',
+    logout_hint:'Sign out on this device.', sign_out:'Sign out', loading:'Loading…',
+    back_list:'← List', all_countries:'← All Countries', search:'Search', refresh:'⟳ Refresh',
+    vk_search_ph:'Search well name / ID…', vk_wells_count:'wells (current)', vk_wells:'wells', vk_no_wells:'No wells.',
+    vk_cached:'(cached)', vk_current:'(current)', vk_no_data:'No data — press "⟳ Refresh" while online.', vk_match:'matches', vk_no_match:'No matching well: ', vk_unnamed:'(Unnamed)',
+    st_working:'Working', st_broken:'Not working', st_uninspected:'Not inspected',
+    offline_list:'Offline — showing the last saved list.',
+    k_wellid:'Well ID', k_coord:'Coordinates', k_portalid:'Portal Vakıf Eser ID',
+    vk_kunye:'Foundation Record', k_country:'Country', k_city:'City', k_village:'District / Village',
+    k_pop:'Area Population', k_house:'Households', k_benef:'Beneficiaries',
+    k_welldepth:'Well Depth', k_pipedepth:'Pipe Depth', k_pumpdepth:'Pump Depth',
+    k_responsible:'Well Officer', k_contact:'Officer Contact',
+    vk_inspstatus:'Inspection Status', vk_insp_word:'inspection(s)', vk_no_insp:'No inspection response for this well.',
+    vk_images:'Images', vk_images_btn:'View Images', pdf_download:'Download PDF', wa_share:'Share via WhatsApp',
+    i_inspector:'Inspector', i_partner:'Partner', i_working:'Working?', i_coord:'Coordinate',
+    i_repair:'Needs Repair', i_health:'Health Conditions', i_usage:'Usage Purposes',
+    i_rating:'Condition & Performance Assessment', i_component:'Component', i_note:'Inspector Note'
+  },
+  fr:{
+    login_sub:'Connectez-vous avec votre identifiant et mot de passe', username:'Identifiant', password:'Mot de passe',
+    sign_in:'Se connecter', login_need:'Identifiant et mot de passe requis.', login_fail:'Échec de connexion : identifiant ou mot de passe incorrect.',
+    my_account:'Profil', home:'Accueil', net_online:'En ligne', net_offline:'Hors ligne', net_waiting:'en attente',
+    m_resp:'Inspection', m_resp_sub:'Réponses', m_rev:'Faisabilité', m_rev_sub:'Nouveau / Révision',
+    m_map:'GPS', m_map_sub:'Carte', m_vakif:'Vakıf Eser', m_vakif_sub:'Fiche info', m_report:'Rapport', m_report_sub:'Tableau de bord',
+    acct_info:'Informations du compte', display_name:'Nom affiché', email:'E-mail', created:'Créé le', last_login:'Dernière connexion',
+    language:'Langue', change_pass:'Changer le mot de passe', change_pass_hint:'Définissez un nouveau mot de passe (au moins 6 caractères). Une connexion internet est requise.',
+    new_pass:'Nouveau mot de passe', new_pass2:'Nouveau mot de passe (répéter)', update_pass:'Mettre à jour',
+    pass_min:'Le mot de passe doit comporter au moins 6 caractères.', pass_match:'Les mots de passe ne correspondent pas.', pass_need_net:'Une connexion internet est requise pour changer le mot de passe.',
+    pass_fail:'Échec de la mise à jour : ', pass_ok:'Mot de passe mis à jour avec succès.', pass_net_err:'Échec de la mise à jour (erreur réseau).',
+    dl_map_title:'Télécharger la carte hors ligne', dl_map_hint:'Téléchargez les tuiles satellite autour des puits du pays sélectionné ; la carte s\'ouvre sans internet sur le terrain. Une connexion est requise pour télécharger.',
+    country:'Pays', dl_load_wells:'⟳ Charger les puits', dl_map_btn:'Télécharger la carte', dl_images_btn:'🖼️ Télécharger les images', cancel:'Annuler',
+    logout_hint:'Se déconnecter sur cet appareil.', sign_out:'Se déconnecter', loading:'Chargement…',
+    back_list:'← Liste', all_countries:'← Tous les pays', search:'Rechercher', refresh:'⟳ Actualiser',
+    vk_search_ph:'Rechercher nom / ID du puits…', vk_wells_count:'puits (à jour)', vk_wells:'puits', vk_no_wells:'Aucun puits.',
+    vk_cached:'(cache)', vk_current:'(à jour)', vk_no_data:'Aucune donnée — appuyez sur « ⟳ Actualiser » en ligne.', vk_match:'correspondance(s)', vk_no_match:'Aucun puits correspondant : ', vk_unnamed:'(Sans nom)',
+    st_working:'Fonctionne', st_broken:'Hors service', st_uninspected:'Non inspecté',
+    offline_list:'Hors ligne — affichage de la dernière liste enregistrée.',
+    k_wellid:'ID du puits', k_coord:'Coordonnées', k_portalid:'ID Vakıf Eser du portail',
+    vk_kunye:'Fiche de la fondation', k_country:'Pays', k_city:'Ville', k_village:'Quartier / Village',
+    k_pop:'Population de la zone', k_house:'Ménages', k_benef:'Bénéficiaires',
+    k_welldepth:'Profondeur du puits', k_pipedepth:'Profondeur du tuyau', k_pumpdepth:'Profondeur de la pompe',
+    k_responsible:'Responsable du puits', k_contact:'Contact du responsable',
+    vk_inspstatus:'État d\'inspection', vk_insp_word:'inspection(s)', vk_no_insp:'Aucune réponse d\'inspection pour ce puits.',
+    vk_images:'Images', vk_images_btn:'Voir les images', pdf_download:'Télécharger le PDF', wa_share:'Partager via WhatsApp',
+    i_inspector:'Inspecteur', i_partner:'Partenaire', i_working:'Fonctionne ?', i_coord:'Coordonnée',
+    i_repair:'Réparation nécessaire', i_health:'Conditions sanitaires', i_usage:'Usages',
+    i_rating:'Évaluation état & performance', i_component:'Composant', i_note:'Note de l\'inspecteur'
+  }
+};
+function t(key){ var d=I18N[LANG]||I18N.tr; return (d&&d[key]!=null)?d[key]:(I18N.tr[key]!=null?I18N.tr[key]:key); }
+function applyI18n(){
+  try{ document.documentElement.lang=LANG; }catch(e){}
+  document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el){ el.setAttribute('placeholder',t(el.getAttribute('data-i18n-ph'))); });
+  document.querySelectorAll('[data-i18n-title]').forEach(function(el){ el.title=t(el.getAttribute('data-i18n-title')); });
+}
+function setLang(l){ if(LANGS.indexOf(l)<0) return; try{ localStorage.setItem('otter_lang',l); }catch(e){} location.reload(); }
+
 var ME = null;             // {username}
 var RESP = [], REV = [];   // yüklü kayıtlar
 var editingResp = null, editingRev = null;
@@ -471,6 +607,7 @@ function hideMsg(el){document.getElementById(el).className='msg';}
 
 // ── Oturum ──────────────────────────────────────────────────
 async function init(){
+  applyI18n();                               // açılışta dil paketini uygula (giriş ekranı dâhil)
   var user=null;
   try{ var {data}=await sb.auth.getSession(); user=data&&data.session&&data.session.user; }catch(e){}
   if(user){ enterApp(user); }
@@ -481,45 +618,57 @@ async function init(){
 async function enterApp(user){
   if(!user){ try{ var {data}=await sb.auth.getSession(); user=data&&data.session&&data.session.user; }catch(e){} }
   if(!user){ document.getElementById('loginView').classList.remove('hide'); return; }
-  ME={username:(user.user_metadata&&user.user_metadata.username)||(user.email||'').split('@')[0],
+  var md=user.user_metadata||{};
+  ME={username:md.username||(user.email||'').split('@')[0],
+      display:(md.display_name||md.full_name||md.name||md.username||(user.email||'').split('@')[0]),
       email:user.email||'', created:user.created_at||'', lastSignIn:user.last_sign_in_at||'', uid:user.id||''};
-  var mods=(user.user_metadata&&user.user_metadata.modules);   // yetki (OTTER'dan)
+  var mods=md.modules;   // yetki (OTTER'dan)
   ALLOWED=(Array.isArray(mods)&&mods.length)?mods.slice():null; // null → tüm modüller
   document.getElementById('loginView').classList.add('hide');
   document.getElementById('appView').classList.remove('hide');
   document.getElementById('whoami').textContent=ME.username;
+  document.getElementById('btnProfile').textContent=initials(ME.display);
   applyModulePerms();                        // izinli modülleri göster, diğerlerini gizle
+  applyI18n();                               // dil paketini uygula (login sonrası)
   updateNet();                               // ağ göstergesi
-  showHome(); loadResponses(); loadRevisions();   // ilk ekran = modül kareleri
+  navSeed(function(){ showTab('home'); }); loadResponses(); loadRevisions();   // ilk ekran = modül kareleri (geri-yığını kökü)
   flushOutbox();                             // giriş sonrası bekleyenleri gönder
 }
 document.getElementById('btnLogin').onclick=async function(){
   hideMsg('loginMsg');
   var user=document.getElementById('luser').value.trim().toLowerCase();
   var pass=document.getElementById('lpass').value;
-  if(!user||!pass){ show('loginMsg','Kullanıcı adı ve şifre gerekli.',false); return; }
+  if(!user||!pass){ show('loginMsg',t('login_need'),false); return; }
   this.disabled=true;
   var {data,error}=await sb.auth.signInWithPassword({email:user+'@'+EMAIL_DOMAIN,password:pass});
   this.disabled=false;
-  if(error){ show('loginMsg','Giriş başarısız: kullanıcı adı veya şifre hatalı.',false); return; }
+  if(error){ show('loginMsg',t('login_fail'),false); return; }
   enterApp(data&&data.user);
 };
 document.getElementById('lpass').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btnLogin').click();});
-document.getElementById('btnLogout').onclick=doLogout;
 async function doLogout(){ await sb.auth.signOut(); location.reload(); }
+function initials(name){ var s=String(name||'').trim(); if(!s) return '?';
+  var p=s.split(/\s+/).filter(Boolean);
+  var a=(p[0]||'').charAt(0), b=(p.length>1?(p[p.length-1]||'').charAt(0):'');
+  return (a+b).toUpperCase()||'?'; }
 
 // ── Hesabım ─────────────────────────────────────────────────
+var _LOCALE={tr:'tr-TR',en:'en-GB',fr:'fr-FR'};
 function fmtDate(s){ if(!s) return '—'; try{ var d=new Date(s); if(isNaN(d)) return '—';
-  return d.toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return '—'; } }
+  return d.toLocaleString(_LOCALE[LANG]||'tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return '—'; } }
 function acctRow(k,v){ return '<div class="row" style="padding:7px 0;border-bottom:1px solid var(--border);">'+
   '<span class="muted">'+esc(k)+'</span><span style="font-weight:600;text-align:right;">'+esc(v)+'</span></div>'; }
 function renderAccount(){
   if(!ME){ return; }
+  document.getElementById('acctAvatar').textContent=initials(ME.display);
+  document.getElementById('acctDisplay').textContent=ME.display||'—';
+  document.getElementById('acctUser').textContent='@'+(ME.username||'');
+  var ls=document.getElementById('langSel'); if(ls) ls.value=LANG;
   var el=document.getElementById('acctInfo');
-  el.innerHTML = acctRow('Kullanıcı Adı', ME.username||'—')
-    + acctRow('E-posta', ME.email||'—')
-    + acctRow('Oluşturulma', fmtDate(ME.created))
-    + acctRow('Son Giriş', fmtDate(ME.lastSignIn));
+  el.innerHTML = acctRow(t('display_name'), ME.display||'—')
+    + acctRow(t('email'), ME.email||'—')
+    + acctRow(t('created'), fmtDate(ME.created))
+    + acctRow(t('last_login'), fmtDate(ME.lastSignIn));
   hideMsg('acctMsg');
   document.getElementById('acctPass1').value='';
   document.getElementById('acctPass2').value='';
@@ -528,16 +677,16 @@ function renderAccount(){
 document.getElementById('btnChangePass').onclick=async function(){
   hideMsg('acctMsg');
   var p1=document.getElementById('acctPass1').value, p2=document.getElementById('acctPass2').value;
-  if(!p1||p1.length<6){ show('acctMsg','Şifre en az 6 karakter olmalı.',false); return; }
-  if(p1!==p2){ show('acctMsg','Şifreler eşleşmiyor.',false); return; }
-  if(!navigator.onLine){ show('acctMsg','Şifre değiştirmek için internet gerekir.',false); return; }
+  if(!p1||p1.length<6){ show('acctMsg',t('pass_min'),false); return; }
+  if(p1!==p2){ show('acctMsg',t('pass_match'),false); return; }
+  if(!navigator.onLine){ show('acctMsg',t('pass_need_net'),false); return; }
   this.disabled=true;
   try{
     var {error}=await sb.auth.updateUser({password:p1});
-    if(error){ show('acctMsg','Şifre güncellenemedi: '+(error.message||'hata'),false); }
-    else { show('acctMsg','Şifre başarıyla güncellendi.',true);
+    if(error){ show('acctMsg',t('pass_fail')+(error.message||'hata'),false); }
+    else { show('acctMsg',t('pass_ok'),true);
       document.getElementById('acctPass1').value=''; document.getElementById('acctPass2').value=''; }
-  }catch(e){ show('acctMsg','Şifre güncellenemedi (ağ hatası).',false); }
+  }catch(e){ show('acctMsg',t('pass_net_err'),false); }
   this.disabled=false;
 };
 document.getElementById('btnLogout2').onclick=doLogout;
@@ -715,6 +864,37 @@ function applyModulePerms(){
     el.style.display = modAllowed(el.getAttribute('data-mod')) ? '' : 'none';
   });
 }
+// ══════════════════════════════════════════════════════════════
+//  Mobil GERİ TUŞU — uygulama içi navigasyon geçmişi (History API)
+//  Cihaz geri tuşu uygulamadan çıkmak yerine menüde bir adım geri gelir
+//  (modül → ana ekran, Vakıf detay → liste → ülkeler). Kökte (ana ekran)
+//  geri tuşu normal davranır (uygulamadan çıkar).
+// ══════════════════════════════════════════════════════════════
+var _nav=[];              // ekran yığını: her öğe bir render fonksiyonu (sonuncu = görünen)
+var _navPop=false;        // popstate sırasında ileri-push engeli
+function navSeed(renderFn){ _nav=[renderFn]; try{ history.replaceState({otter:1},''); }catch(e){} renderFn(); }
+function navTo(renderFn){                    // ileri git (yeni ekran)
+  if(_navPop){ renderFn(); return; }
+  _nav.push(renderFn);
+  try{ history.pushState({otter:_nav.length},''); }catch(e){}
+  renderFn();
+}
+function navHome(){                          // ana ekrana dön → yığını köke indir
+  _nav=[function(){ showTab('home'); }];
+  try{ history.replaceState({otter:1},''); }catch(e){}
+  showTab('home');
+}
+window.addEventListener('popstate', function(){
+  if(_nav.length>1){
+    _nav.pop();
+    _navPop=true; try{ _nav[_nav.length-1](); }catch(e){} _navPop=false;
+  }
+  // _nav.length<=1 → kök: engelleme, tarayıcı normal geri (uygulamadan çıkış)
+});
+function nav(t){ navTo(function(){ showTab(t); }); }   // ana menüden modül aç
+function vkNavCountry(i){ navTo(function(){ vkShowCountry(i); }); }
+function vkNavOpen(enc){ navTo(function(){ vkOpen(enc); }); }
+
 function showHome(){ showTab('home'); }      // ilk ekran: modül kareleri
 function showTab(t){
   if(MOD_KEYS.indexOf(t)>=0 && !modAllowed(t)) t='home';   // izinsiz modüle erişim → ana ekran
@@ -1038,11 +1218,10 @@ async function flushOutbox(){
   if(sent){ show('globalMsg',sent+' bekleyen kayıt gönderildi.',true); loadResponses(); loadRevisions(); }
 }
 function updateNet(){
-  var chip=document.getElementById('netChip'); if(!chip) return;
-  var n=outboxCount();
-  chip.className='pill '+(navigator.onLine?'online':'offline');
-  chip.textContent=(navigator.onLine?'● Çevrimiçi':'● Çevrimdışı')+(n?(' · '+n+' bekliyor'):'');
-  chip.style.display='inline-block';
+  var dot=document.getElementById('netDot'); if(!dot) return;
+  var n=outboxCount(), on=navigator.onLine;
+  dot.className='net-dot '+(!on?'off':(n?'warn':'on'));   // 🔴 çevrimdışı · 🟡 bekleyen var · 🟢 senkron
+  dot.title=on ? (t('net_online')+(n?(' · '+n+' '+t('net_waiting')):'')) : t('net_offline');
 }
 window.addEventListener('online', function(){ updateNet(); flushOutbox(); });
 window.addEventListener('offline', updateNet);
@@ -1338,8 +1517,9 @@ async function initVakifTab(){
 function vkAfterLoad(res){
   vkShowCountries();
   var el=document.getElementById('vkInfo');
-  el.textContent=(res && res.from==='none')?'Veri yok — çevrimiçiyken "⟳ Güncelle".'
-    :((VFORMS?VFORMS.length:0)+' kuyu'+(res&&res.from==='cache'?' (önbellek)':(res&&res.from==='online'?' (güncel)':'')));
+  var suffix=(res&&res.from==='cache')?(' '+t('vk_cached')):((res&&res.from==='online')?(' '+t('vk_current')):'');
+  el.textContent=(res && res.from==='none')?t('vk_no_data')
+    :((VFORMS?VFORMS.length:0)+' '+t('vk_wells')+suffix);
 }
 async function loadVakif(forceOnline){
   if(!forceOnline){ var c=await idbGet('vakif_forms'); if(c&&c.forms&&c.forms.length){ VFORMS=c.forms; return {from:'cache'}; } }
@@ -1360,9 +1540,9 @@ function _vkView(v){
   document.getElementById('vkDetailView').classList.toggle('hide',v!=='detail');
 }
 function vkStatusPill(f){
-  if(f.status==='Çalışıyor') return '<span class="vk-pill p-ok">● Çalışıyor</span>';
-  if(f.status==='Çalışmıyor') return '<span class="vk-pill p-no">● Çalışmıyor</span>';
-  return '<span class="vk-pill p-un">● Denetlenmedi</span>';
+  if(f.status==='Çalışıyor') return '<span class="vk-pill p-ok">● '+esc(t('st_working'))+'</span>';
+  if(f.status==='Çalışmıyor') return '<span class="vk-pill p-no">● '+esc(t('st_broken'))+'</span>';
+  return '<span class="vk-pill p-un">● '+esc(t('st_uninspected'))+'</span>';
 }
 // Ülke adı birleştirme — TR/EN varyantları tek grupta (ör. "Gine"="Guinea")
 function _ctryFold(s){
@@ -1405,20 +1585,28 @@ function vkShowCountries(){
   VK_COUNTRIES=Object.keys(cmap).sort(function(a,b){return String(a).localeCompare(String(b),'tr');}).map(function(c){return {name:c,count:cmap[c]};});
   box.innerHTML = VK_COUNTRIES.length
     ? ('<div class="vk-cgrid">'+VK_COUNTRIES.map(function(c,i){
-        return '<button class="vk-ctile" onclick="vkShowCountry('+i+')"><span class="cn">'+esc(c.name)+'</span><span class="cc">'+c.count+' kuyu</span></button>';
+        return '<button class="vk-ctile" onclick="vkNavCountry('+i+')"><span class="cn">'+esc(c.name)+'</span><span class="cc">'+c.count+' '+esc(t('vk_wells'))+'</span></button>';
       }).join('')+'</div>')
-    : '<div class="vk-info">Kuyu yok.</div>';
+    : '<div class="vk-info">'+esc(t('vk_no_wells'))+'</div>';
+}
+// Kuyu ID sıralaması: boş ID'ler en üstte → sayısal ID'ler artan → metinsel ID'ler (auto:…) alfabetik
+function _vkIdCmp(a,b){
+  var ia=String(a.well_id==null?'':a.well_id).trim(), ib=String(b.well_id==null?'':b.well_id).trim();
+  if(!ia&&!ib) return 0; if(!ia) return -1; if(!ib) return 1;       // boş üstte
+  var isa=/^\d+(?:\.\d+)?$/.test(ia), isb=/^\d+(?:\.\d+)?$/.test(ib);
+  if(isa&&isb) return parseFloat(ia)-parseFloat(ib);               // sayısal artan
+  if(isa) return -1; if(isb) return 1;                             // sayısal, metinselden önce
+  return ia.localeCompare(ib,'tr');
 }
 function vkShowCountry(i){
   var c=VK_COUNTRIES[i]; if(!c) return; VK_COUNTRY=c.name;
   _vkView('list'); document.getElementById('vkBack').classList.remove('hide');
-  var list=VFORMS.filter(function(f){return vkCanonCountry(f.country)===c.name;})
-    .sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''),'tr');});
-  document.getElementById('vkList').innerHTML=list.map(vkRowHTML).join('')||'<div class="vk-info">Bu ülkede kuyu yok.</div>';
+  var list=VFORMS.filter(function(f){return vkCanonCountry(f.country)===c.name;}).sort(_vkIdCmp);
+  document.getElementById('vkList').innerHTML=list.map(vkRowHTML).join('')||'<div class="vk-info">'+esc(t('vk_no_wells'))+'</div>';
 }
 function vkRowHTML(f){
-  return '<div class="vk-row" onclick="vkOpen(\''+encodeURIComponent(f.well_id)+'\')">'+
-    '<div style="min-width:0"><div class="nm">'+esc(f.name||'(İsimsiz)')+'</div><div class="id">'+esc(f.well_id)+(VK_COUNTRY?'':(' · '+esc(vkCanonCountry(f.country))))+'</div></div>'+
+  return '<div class="vk-row" onclick="vkNavOpen(\''+encodeURIComponent(f.well_id)+'\')">'+
+    '<div style="min-width:0"><div class="nm">'+esc(f.name||t('vk_unnamed'))+'</div><div class="id">'+esc(f.well_id)+(VK_COUNTRY?'':(' · '+esc(vkCanonCountry(f.country))))+'</div></div>'+
     '<div class="cnt">'+vkStatusPill(f)+'</div></div>';
 }
 function vkFind(wid){ wid=String(wid); for(var i=0;i<(VFORMS||[]).length;i++){ if(String(VFORMS[i].well_id)===wid) return VFORMS[i]; } return null; }
@@ -1432,20 +1620,20 @@ function vkSearch(){
   var raw=(document.getElementById('vkSearch').value||'').trim(); if(!raw||!VFORMS) return;
   var q=nkey(raw);
   var hit=VFORMS.filter(function(f){ return nkey(String(f.well_id)).indexOf(q)>=0 || nkey(String(f.name||'')).indexOf(q)>=0; });
-  if(!hit.length){ document.getElementById('vkInfo').textContent='Eşleşen kuyu yok: '+raw; return; }
-  if(hit.length===1){ vkOpen(encodeURIComponent(hit[0].well_id)); return; }
+  if(!hit.length){ document.getElementById('vkInfo').textContent=t('vk_no_match')+raw; return; }
+  if(hit.length===1){ vkNavOpen(encodeURIComponent(hit[0].well_id)); return; }
   VK_COUNTRY=null; _vkView('list'); document.getElementById('vkBack').classList.remove('hide');
   document.getElementById('vkList').innerHTML=hit.slice(0,300).map(vkRowHTML).join('');
-  document.getElementById('vkInfo').textContent=hit.length+' eşleşme.';
+  document.getElementById('vkInfo').textContent=hit.length+' '+t('vk_match');
 }
 function vkF(k,v,unit){
   var val=(v==null||v==='')?'':(esc(String(v))+(unit?(' <span style="color:#7a8099;font-weight:500">'+unit+'</span>'):''));
   return '<div class="vk-f"><div class="k">'+esc(k)+'</div><div class="v">'+val+'</div></div>';
 }
 function vkHeroStatus(f){
-  if(f.status==='Çalışıyor') return '<span class="ch st" style="color:#1f9d57">● Çalışıyor</span>';
-  if(f.status==='Çalışmıyor') return '<span class="ch st" style="color:#d14343">● Çalışmıyor</span>';
-  return '<span class="ch st" style="color:#7a8099">● Denetlenmedi</span>';
+  if(f.status==='Çalışıyor') return '<span class="ch st" style="color:#1f9d57">● '+esc(t('st_working'))+'</span>';
+  if(f.status==='Çalışmıyor') return '<span class="ch st" style="color:#d14343">● '+esc(t('st_broken'))+'</span>';
+  return '<span class="ch st" style="color:#7a8099">● '+esc(t('st_uninspected'))+'</span>';
 }
 function vkYN(v,good){
   var s=String(v==null?'':v).trim(); if(!s) return '';   // boş → boş göster
@@ -1465,26 +1653,26 @@ function vkRatingTable(rating){
     }
     body+='</tr>';
   }
-  var head='<tr><th>Bileşen</th>'+cols.map(function(c){return '<th>'+esc(c.label)+'</th>';}).join('')+'</tr>';
-  return '<div class="sub-h">Durum ve Verim Değerlendirmesi</div><div style="overflow-x:auto"><table class="vkt"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
+  var head='<tr><th>'+esc(t('i_component'))+'</th>'+cols.map(function(c){return '<th>'+esc(c.label)+'</th>';}).join('')+'</tr>';
+  return '<div class="sub-h">'+esc(t('i_rating'))+'</div><div style="overflow-x:auto"><table class="vkt"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
 }
 function vkInspHTML(it, first){
   var usage=Array.isArray(it.usage)?it.usage:(it.usage?[it.usage]:[]);
   var h='<div class="vk-insp'+(first?' first':'')+'">';
   h+='<div class="ibar"><span class="idate">'+vkVal(it.date)+'</span>';
-  h+='<span class="iby">Denetleyen: '+vkVal(it.inspector)+(it.partner?(' · Partner: '+esc(String(it.partner))):'')+'</span></div>';
+  h+='<span class="iby">'+esc(t('i_inspector'))+': '+vkVal(it.inspector)+(it.partner?(' · '+esc(t('i_partner'))+': '+esc(String(it.partner))):'')+'</span></div>';
   h+='<div class="ibody">';
   h+='<div class="vk-g">'+
-     '<div class="vk-f"><div class="k">Çalışıyor mu?</div><div class="v">'+vkYN(it.working,'EVET')+'</div></div>'+
-     '<div class="vk-f"><div class="k">Koordinat</div><div class="v">'+vkYN(it.coord,'DOĞRU')+'</div></div>'+
-     '<div class="vk-f"><div class="k">Tamirat İhtiyacı</div><div class="v">'+vkYN(it.repair,'HAYIR')+'</div></div>'+
+     '<div class="vk-f"><div class="k">'+esc(t('i_working'))+'</div><div class="v">'+vkYN(it.working,'EVET')+'</div></div>'+
+     '<div class="vk-f"><div class="k">'+esc(t('i_coord'))+'</div><div class="v">'+vkYN(it.coord,'DOĞRU')+'</div></div>'+
+     '<div class="vk-f"><div class="k">'+esc(t('i_repair'))+'</div><div class="v">'+vkYN(it.repair,'HAYIR')+'</div></div>'+
      '</div>';
   h+='<div class="vk-g two" style="margin-top:8px;">'+
-     '<div class="vk-f"><div class="k">Sağlık Şartları</div><div class="v">'+vkYN(it.health,'EVET')+'</div></div>'+
-     '<div class="vk-f"><div class="k">Kullanım Amaçları</div><div class="v" style="line-height:1.9">'+(usage.length?usage.map(function(u){return '<span class="vk-chv">'+esc(u)+'</span>';}).join(''):'—')+'</div></div>'+
+     '<div class="vk-f"><div class="k">'+esc(t('i_health'))+'</div><div class="v">'+vkYN(it.health,'EVET')+'</div></div>'+
+     '<div class="vk-f"><div class="k">'+esc(t('i_usage'))+'</div><div class="v" style="line-height:1.9">'+(usage.length?usage.map(function(u){return '<span class="vk-chv">'+esc(u)+'</span>';}).join(''):'—')+'</div></div>'+
      '</div>';
   h+=vkRatingTable(it.rating);
-  if(it.note){ h+='<div class="sub-h">Denetçi Açıklaması</div><div class="vk-memo">'+esc(String(it.note))+'</div>'; }
+  if(it.note){ h+='<div class="sub-h">'+esc(t('i_note'))+'</div><div class="vk-memo">'+esc(String(it.note))+'</div>'; }
   h+='</div></div>';
   return h;
 }
@@ -1493,28 +1681,28 @@ function vkDetailHTML(f, pdf){
   var hasc=(f.lat!=null&&f.lat!==''&&f.lon!=null&&f.lon!=='');
   var coord=hasc?(Number(f.lat).toFixed(6)+', '+Number(f.lon).toFixed(6)):'';
   var h = pdf ? '' : ('<div class="vk-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">'+
-    '<button class="vk-btn" onclick="vkBackToList()">← Liste</button>'+
-    '<button class="vk-imgbtn" title="PDF İndir" aria-label="PDF İndir" onclick="vkExportPDF(\''+enc+'\',false)" style="display:inline-flex;align-items:center;justify-content:center;padding:7px 9px;"><svg viewBox="0 0 24 24" width="18" height="18" style="flex:0 0 auto;"><path d="M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#e23b3b"/><path d="M14 2l4 4h-4z" fill="#a62828"/><text x="11" y="17" text-anchor="middle" font-size="6" font-weight="700" fill="#fff" font-family="Arial,sans-serif">PDF</text></svg></button>'+
-    '<button class="vk-imgbtn" title="WhatsApp ile Paylaş" aria-label="WhatsApp ile Paylaş" onclick="vkExportPDF(\''+enc+'\',true)" style="display:inline-flex;align-items:center;justify-content:center;padding:7px 9px;"><svg viewBox="0 0 24 24" width="18" height="18" style="flex:0 0 auto;" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347M12.05 21.785h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.885-9.885 9.885M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.359.101 11.892c0 2.096.549 4.142 1.595 5.945L0 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.582 0 11.943-5.359 11.945-11.893a11.821 11.821 0 0 0-3.418-8.45z"/></svg></button>'+
+    '<button class="vk-btn" onclick="history.back()">'+esc(t('back_list'))+'</button>'+
+    '<button class="vk-imgbtn" title="'+esc(t('pdf_download'))+'" aria-label="'+esc(t('pdf_download'))+'" onclick="vkExportPDF(\''+enc+'\',false)" style="display:inline-flex;align-items:center;justify-content:center;padding:7px 9px;"><svg viewBox="0 0 24 24" width="18" height="18" style="flex:0 0 auto;"><path d="M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#e23b3b"/><path d="M14 2l4 4h-4z" fill="#a62828"/><text x="11" y="17" text-anchor="middle" font-size="6" font-weight="700" fill="#fff" font-family="Arial,sans-serif">PDF</text></svg></button>'+
+    '<button class="vk-imgbtn" title="'+esc(t('wa_share'))+'" aria-label="'+esc(t('wa_share'))+'" onclick="vkExportPDF(\''+enc+'\',true)" style="display:inline-flex;align-items:center;justify-content:center;padding:7px 9px;"><svg viewBox="0 0 24 24" width="18" height="18" style="flex:0 0 auto;" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347M12.05 21.785h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.885-9.885 9.885M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.359.101 11.892c0 2.096.549 4.142 1.595 5.945L0 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.582 0 11.943-5.359 11.945-11.893a11.821 11.821 0 0 0-3.418-8.45z"/></svg></button>'+
     '</div>');
   h+='<div class="vk-hero"><div class="nm">'+vkVal(f.name)+'</div><div class="chips">'+
-    '<span class="ch">🆔 Su Kuyusu ID: '+vkVal(f.well_id)+'</span>'+
-    '<span class="ch">🧭 Koordinat: '+esc(coord)+'</span>'+
-    '<span class="ch">🏛️ Portal Vakıf Eser ID: '+vkVal(f.portal_id)+'</span>'+
+    '<span class="ch">🆔 '+esc(t('k_wellid'))+': '+vkVal(f.well_id)+'</span>'+
+    '<span class="ch">🧭 '+esc(t('k_coord'))+': '+esc(coord)+'</span>'+
+    '<span class="ch">🏛️ '+esc(t('k_portalid'))+': '+vkVal(f.portal_id)+'</span>'+
     vkHeroStatus(f)+'</div></div>';
   h+='<div class="vk-card">';
-  h+='<div class="vk-s"><h3>Vakıf Eser Künyesi</h3>'+
-     '<div class="vk-g">'+vkF('Ülke',f.country)+vkF('Şehir',f.sehir)+vkF('Mahalle / Köy',f.mahalle)+'</div>'+
-     '<div class="vk-g" style="margin-top:8px;">'+vkF('Bölge Nüfusu',f.inhabitants)+vkF('Hane Sayısı',f.households)+vkF('Faydalanan',f.beneficiaries)+'</div>'+
-     '<div class="vk-g" style="margin-top:8px;">'+vkF('Su Kuyusu Derinliği',f.well_depth,'m')+vkF('Boru Derinliği',f.pipe_depth,'m')+vkF('Pompa Derinliği',f.pump_depth,'m')+'</div>'+
-     '<div class="vk-g two" style="margin-top:8px;">'+vkF('Su Kuyusu Sorumlusu',f.responsible)+vkF('Sorumlu İletişim',f.contact)+'</div>'+
+  h+='<div class="vk-s"><h3>'+esc(t('vk_kunye'))+'</h3>'+
+     '<div class="vk-g">'+vkF(t('k_country'),f.country)+vkF(t('k_city'),f.sehir)+vkF(t('k_village'),f.mahalle)+'</div>'+
+     '<div class="vk-g" style="margin-top:8px;">'+vkF(t('k_pop'),f.inhabitants)+vkF(t('k_house'),f.households)+vkF(t('k_benef'),f.beneficiaries)+'</div>'+
+     '<div class="vk-g" style="margin-top:8px;">'+vkF(t('k_welldepth'),f.well_depth,'m')+vkF(t('k_pipedepth'),f.pipe_depth,'m')+vkF(t('k_pumpdepth'),f.pump_depth,'m')+'</div>'+
+     '<div class="vk-g two" style="margin-top:8px;">'+vkF(t('k_responsible'),f.responsible)+vkF(t('k_contact'),f.contact)+'</div>'+
      '</div>';
   var insp=f.inspections||[];
-  h+='<div class="vk-s"><h3>Denetim Durumu — '+insp.length+' denetim</h3>';
+  h+='<div class="vk-s"><h3>'+esc(t('vk_inspstatus'))+' — '+insp.length+' '+esc(t('vk_insp_word'))+'</h3>';
   h+= insp.length ? insp.map(function(it,i){return vkInspHTML(it,i===0);}).join('')
-                  : '<div class="vk-info">Bu kuyu için denetim yanıtı yok.</div>';
+                  : '<div class="vk-info">'+esc(t('vk_no_insp'))+'</div>';
   h+='</div>';
-  if(!pdf) h+='<div class="vk-s"><h3>Görseller</h3><button class="vk-imgbtn" onclick="showWellImage(\''+enc+'\')">🖼️ Görselleri Gör</button></div>';
+  if(!pdf) h+='<div class="vk-s"><h3>'+esc(t('vk_images'))+'</h3><button class="vk-imgbtn" onclick="showWellImage(\''+enc+'\')">🖼️ '+esc(t('vk_images_btn'))+'</button></div>';
   h+='</div>';
   return h;
 }
