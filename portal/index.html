@@ -22,6 +22,7 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 header{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:16px;flex-wrap:wrap;gap:8px;}
 .brand{font-size:18px;font-weight:600;color:var(--accent);flex:0 1 auto;min-width:0;}
 .hleft{display:flex;align-items:center;gap:9px;min-width:0;flex:1 1 auto;}
+.hright{display:inline-flex;align-items:center;gap:10px;flex:0 0 auto;}
 .who{font-size:13px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;min-width:0;}
 .who:before{content:"·";margin-right:7px;color:var(--muted);}
 .net-dot{width:11px;height:11px;border-radius:50%;background:var(--muted);flex:0 0 auto;transition:background .2s;}
@@ -135,11 +136,12 @@ table.dt input[type=checkbox]{width:18px;height:18px;}
   <div id="appView" class="hide">
     <header>
       <span class="hleft">
-        <span id="netDot" class="net-dot" title=""></span>
         <span class="brand" onclick="navHome()" data-i18n-title="home" style="cursor:pointer;display:inline-flex;align-items:center;gap:8px;"><img src="icon-192.png" alt="OTTER" style="width:28px;height:28px;border-radius:7px;flex:0 0 auto;">OTTER Saha Portalı</span>
-        <span class="who" id="whoami" onclick="nav('acct')" title="" style="cursor:pointer;"></span>
       </span>
-      <button class="avatar" id="btnProfile" onclick="nav('acct')" data-i18n-title="my_account" title="">?</button>
+      <span class="hright">
+        <span id="netDot" class="net-dot" title=""></span>
+        <button class="avatar" id="btnProfile" onclick="nav('acct')" data-i18n-title="my_account" title="">?</button>
+      </span>
     </header>
     <div id="globalMsg" class="msg"></div>
 
@@ -723,7 +725,6 @@ async function enterApp(user){
   ALLOWED=(Array.isArray(mods)&&mods.length)?mods.slice():null; // null → tüm modüller
   document.getElementById('loginView').classList.add('hide');
   document.getElementById('appView').classList.remove('hide');
-  document.getElementById('whoami').textContent=ME.username;
   document.getElementById('btnProfile').textContent=initials(ME.display);
   applyModulePerms();                        // izinli modülleri göster, diğerlerini gizle
   applyI18n();                               // dil paketini uygula (login sonrası)
